@@ -1,0 +1,640 @@
+import { supabase } from './supabase';
+import type { Client, Activity, Monitor, Booking, Invoice, InvoiceItem, Expense, Payroll, Settings } from './supabase';
+
+export class ApiError extends Error {
+  constructor(message: string, public status?: number) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
+export class ApiClient {
+  private static async handleError(error: any) {
+    console.error('API Error:', error);
+    throw new ApiError(error.message || 'An error occurred', error.status);
+  }
+
+  // Clients
+  static async getClients() {
+    try {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('*')
+        .order('name');
+      
+      if (error) throw error;
+      return data as Client[];
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  static async getClient(id: number) {
+    try {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error) throw error;
+      return data as Client;
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  static async createClient(client: Omit<Client, 'id' | 'created_at' | 'updated_at'>) {
+    try {
+      const { data, error } = await supabase
+        .from('clients')
+        .insert(client)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data as Client;
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  static async updateClient(id: number, client: Partial<Client>) {
+    try {
+      const { data, error } = await supabase
+        .from('clients')
+        .update(client)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data as Client;
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  static async deleteClient(id: number) {
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  // Activities
+  static async getActivities() {
+    try {
+      const { data, error } = await supabase
+        .from('activities')
+        .select('*')
+        .order('name');
+      
+      if (error) throw error;
+      return data as Activity[];
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  static async getActivity(id: number) {
+    try {
+      const { data, error } = await supabase
+        .from('activities')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error) throw error;
+      return data as Activity;
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  static async createActivity(activity: Omit<Activity, 'id' | 'created_at' | 'updated_at'>) {
+    try {
+      const { data, error } = await supabase
+        .from('activities')
+        .insert(activity)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data as Activity;
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  static async updateActivity(id: number, activity: Partial<Activity>) {
+    try {
+      const { data, error } = await supabase
+        .from('activities')
+        .update(activity)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data as Activity;
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  static async deleteActivity(id: number) {
+    try {
+      const { error } = await supabase
+        .from('activities')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  // Bookings
+  static async getBookings() {
+    try {
+      const { data, error } = await supabase
+        .from('bookings')
+        .select(`
+          *,
+          client:clients(*),
+          activity:activities(*),
+          monitor:monitors(*)
+        `)
+        .order('date', { ascending: false });
+      
+      if (error) throw error;
+      return data as (Booking & {
+        client: Client;
+        activity: Activity;
+        monitor: Monitor;
+      })[];
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  static async getBooking(id: number) {
+    try {
+      const { data, error } = await supabase
+        .from('bookings')
+        .select(`
+          *,
+          client:clients(*),
+          activity:activities(*),
+          monitor:monitors(*)
+        `)
+        .eq('id', id)
+        .single();
+      
+      if (error) throw error;
+      return data as Booking & {
+        client: Client;
+        activity: Activity;
+        monitor: Monitor;
+      };
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  static async createBooking(booking: Omit<Booking, 'id' | 'created_at' | 'updated_at'>) {
+    try {
+      const { data, error } = await supabase
+        .from('bookings')
+        .insert(booking)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data as Booking;
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  static async updateBooking(id: number, booking: Partial<Booking>) {
+    try {
+      const { data, error } = await supabase
+        .from('bookings')
+        .update(booking)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data as Booking;
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  static async deleteBooking(id: number) {
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  // Invoices
+  static async getInvoices() {
+    try {
+      const { data, error } = await supabase
+        .from('invoices')
+        .select(`
+          *,
+          client:clients(*),
+          items:invoice_items(*)
+        `)
+        .order('date', { ascending: false });
+      
+      if (error) throw error;
+      return data as (Invoice & {
+        client: Client;
+        items: InvoiceItem[];
+      })[];
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  static async getInvoice(id: number) {
+    try {
+      const { data, error } = await supabase
+        .from('invoices')
+        .select(`
+          *,
+          client:clients(*),
+          items:invoice_items(*)
+        `)
+        .eq('id', id)
+        .single();
+      
+      if (error) throw error;
+      return data as Invoice & {
+        client: Client;
+        items: InvoiceItem[];
+      };
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  static async createInvoice(invoice: Omit<Invoice, 'id' | 'created_at' | 'updated_at'>, items: Omit<InvoiceItem, 'id' | 'created_at'>[]) {
+    try {
+      const { data: invoiceData, error: invoiceError } = await supabase
+        .from('invoices')
+        .insert(invoice)
+        .select()
+        .single();
+      
+      if (invoiceError) throw invoiceError;
+
+      const itemsWithInvoiceId = items.map(item => ({
+        ...item,
+        invoice_id: invoiceData.id
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('invoice_items')
+        .insert(itemsWithInvoiceId);
+      
+      if (itemsError) throw itemsError;
+
+      return this.getInvoice(invoiceData.id);
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  static async updateInvoice(id: number, invoice: Partial<Invoice>, items?: Omit<InvoiceItem, 'id' | 'created_at'>[]) {
+    try {
+      const { data: invoiceData, error: invoiceError } = await supabase
+        .from('invoices')
+        .update(invoice)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (invoiceError) throw invoiceError;
+
+      if (items) {
+        // Delete existing items
+        const { error: deleteError } = await supabase
+          .from('invoice_items')
+          .delete()
+          .eq('invoice_id', id);
+        
+        if (deleteError) throw deleteError;
+
+        // Insert new items
+        const itemsWithInvoiceId = items.map(item => ({
+          ...item,
+          invoice_id: id
+        }));
+
+        const { error: itemsError } = await supabase
+          .from('invoice_items')
+          .insert(itemsWithInvoiceId);
+        
+        if (itemsError) throw itemsError;
+      }
+
+      return this.getInvoice(id);
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  static async deleteInvoice(id: number) {
+    try {
+      const { error } = await supabase
+        .from('invoices')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  // Settings
+  static async getSettings() {
+    try {
+      const { data, error } = await supabase
+        .from('settings')
+        .select('*')
+        .single();
+      
+      if (error) throw error;
+      return data as Settings;
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  static async updateSettings(settings: Partial<Settings>) {
+    try {
+      const { data, error } = await supabase
+        .from('settings')
+        .update(settings)
+        .eq('id', 1)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data as Settings;
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  // Monitors
+  static async getMonitors() {
+    try {
+      const { data, error } = await supabase
+        .from('monitors')
+        .select('*')
+        .order('name');
+      
+      if (error) throw error;
+      return data as Monitor[];
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  static async getMonitor(id: number) {
+    try {
+      const { data, error } = await supabase
+        .from('monitors')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error) throw error;
+      return data as Monitor;
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  static async createMonitor(monitor: Omit<Monitor, 'id' | 'created_at' | 'updated_at'>) {
+    try {
+      const { data, error } = await supabase
+        .from('monitors')
+        .insert(monitor)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data as Monitor;
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  static async updateMonitor(id: number, monitor: Partial<Monitor>) {
+    try {
+      const { data, error } = await supabase
+        .from('monitors')
+        .update(monitor)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data as Monitor;
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  static async deleteMonitor(id: number) {
+    try {
+      const { error } = await supabase
+        .from('monitors')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  // Expenses
+  static async getExpenses() {
+    try {
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('*')
+        .order('date', { ascending: false });
+      
+      if (error) throw error;
+      return data as Expense[];
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  static async getExpense(id: number) {
+    try {
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error) throw error;
+      return data as Expense;
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  static async createExpense(expense: Omit<Expense, 'id' | 'created_at' | 'updated_at'>) {
+    try {
+      const { data, error } = await supabase
+        .from('expenses')
+        .insert(expense)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data as Expense;
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  static async updateExpense(id: number, expense: Partial<Expense>) {
+    try {
+      const { data, error } = await supabase
+        .from('expenses')
+        .update(expense)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data as Expense;
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  static async deleteExpense(id: number) {
+    try {
+      const { error } = await supabase
+        .from('expenses')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  // Payrolls
+  static async getPayrolls() {
+    try {
+      const { data, error } = await supabase
+        .from('payrolls')
+        .select('*')
+        .order('year', { ascending: false })
+        .order('month', { ascending: false });
+      
+      if (error) throw error;
+      return data as Payroll[];
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  static async getPayroll(id: number) {
+    try {
+      const { data, error } = await supabase
+        .from('payrolls')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error) throw error;
+      return data as Payroll;
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  static async createPayroll(payroll: Omit<Payroll, 'id' | 'created_at' | 'updated_at'>) {
+    try {
+      const { data, error } = await supabase
+        .from('payrolls')
+        .insert(payroll)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data as Payroll;
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  static async updatePayroll(id: number, payroll: Partial<Payroll>) {
+    try {
+      const { data, error } = await supabase
+        .from('payrolls')
+        .update(payroll)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data as Payroll;
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
+  static async deletePayroll(id: number) {
+    try {
+      const { error } = await supabase
+        .from('payrolls')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+} 
