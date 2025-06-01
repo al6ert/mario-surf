@@ -128,6 +128,7 @@ export default function BookingForm({ booking, clients, activities, monitors, on
             </label>
             <input
               type="time"
+              step="900"
               name="time"
               id="time"
               required

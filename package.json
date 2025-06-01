@@ -1,9 +1,15 @@
 {
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.7.2",
+    "@fortawesome/free-solid-svg-icons": "^6.7.2",
+    "@fortawesome/react-fontawesome": "^0.2.2",
+    "@heroicons/react": "^2.2.0",
     "@supabase/supabase-js": "^2.49.8",
+    "@tailwindcss/postcss": "^4.1.8",
     "@types/next": "^8.0.7",
     "@types/node": "^22.15.29",
     "@types/react": "^19.1.6",
+    "date-fns": "^4.1.0",
     "next": "^15.3.3",
     "react": "^19.1.0",
     "zod": "^3.25.46"
@@ -14,6 +20,9 @@
     "start": "next start"
   },
   "devDependencies": {
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.4",
+    "tailwindcss": "^4.1.8",
     "typescript": "5.8.3"
   }
 }

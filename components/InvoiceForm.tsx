@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
-import type { Invoice, InvoiceItem, Client, Activity } from '../lib/supabase';
+import type { Invoice, InvoiceItem, Client, Activity, Settings } from '../lib/supabase';
 
 interface InvoiceFormProps {
   invoice?: Invoice;
   clients: Client[];
   activities: Activity[];
+  settings: Settings;
   onSubmit: (invoice: Omit<Invoice, 'id' | 'created_at' | 'updated_at'>, items: Omit<InvoiceItem, 'id' | 'created_at'>[]) => Promise<void>;
   onCancel: () => void;
 }
 
 type InvoiceItemForm = Omit<InvoiceItem, 'id' | 'created_at'>;
 
-export default function InvoiceForm({ invoice, clients, activities, onSubmit, onCancel }: InvoiceFormProps) {
+export default function InvoiceForm({ invoice, clients, activities, settings, onSubmit, onCancel }: InvoiceFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [items, setItems] = useState<InvoiceItemForm[]>(
@@ -64,6 +65,16 @@ export default function InvoiceForm({ invoice, clients, activities, onSubmit, on
 
   const calculateSubtotal = () => {
     return items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+  };
+
+  const calculateIVA = () => {
+    const subtotal = calculateSubtotal();
+    const ivaPercentage = settings.iva_percentage || 21;
+    return subtotal * (ivaPercentage / 100);
+  };
+
+  const calculateTotal = () => {
+    return calculateSubtotal() + calculateIVA();
   };
 
   return (
@@ -204,9 +215,19 @@ export default function InvoiceForm({ invoice, clients, activities, onSubmit, on
 
             <div className="mt-4 border-t border-gray-200 pt-4">
               <div className="flex justify-end">
-                <div className="text-right">
-                  <p className="text-sm text-gray-500">Subtotal:</p>
-                  <p className="text-lg font-medium text-gray-900">{calculateSubtotal().toFixed(2)} €</p>
+                <div className="text-right space-y-2">
+                  <div>
+                    <p className="text-sm text-gray-500">Subtotal:</p>
+                    <p className="text-lg font-medium text-gray-900">{calculateSubtotal().toFixed(2)} €</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">IVA ({settings.iva_percentage || 21}%):</p>
+                    <p className="text-lg font-medium text-gray-900">{calculateIVA().toFixed(2)} €</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Total:</p>
+                    <p className="text-lg font-medium text-gray-900">{calculateTotal().toFixed(2)} €</p>
+                  </div>
                 </div>
               </div>
             </div>
