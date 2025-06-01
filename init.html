@@ -1,0 +1,3496 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGTA - Sistema Gestión Turismo Activo</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --light: #ecf0f1;
+            --dark: #34495e;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        
+        .container {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            background-color: var(--primary);
+            color: white;
+            padding: 20px;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .menu-item {
+            padding: 12px 15px;
+            margin: 5px 0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+        }
+        
+        .menu-item:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+        
+        .menu-item.active {
+            background-color: var(--secondary);
+            font-weight: bold;
+        }
+        
+        .menu-item i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .main-content {
+            padding: 30px;
+            overflow-y: auto;
+        }
+        
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-card h3 {
+            margin-top: 0;
+            color: var(--dark);
+            font-size: 1rem;
+        }
+        
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 10px 0;
+            color: var(--primary);
+        }
+        
+        .finance-summary {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .finance-summary h2 {
+            margin-top: 0;
+            color: var(--primary);
+        }
+        
+        .finance-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .finance-row:last-child {
+            border-bottom: none;
+        }
+        
+        .finance-row.total {
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .pending-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .pending-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .pending-card h2 {
+            margin-top: 0;
+            color: var(--primary);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #7f8c8d;
+        }
+        
+        .calendar {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .calendar th, .calendar td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        
+        .calendar th {
+            background-color: var(--light);
+        }
+        
+        .calendar .today {
+            background-color: var(--secondary);
+            color: white;
+            font-weight: bold;
+        }
+        
+        .calendar .has-booking {
+            background-color: #e8f5e9;
+            position: relative;
+        }
+        
+        .calendar .has-booking::after {
+            content: "•";
+            color: var(--success);
+            font-size: 24px;
+            position: absolute;
+            top: 0;
+            right: 5px;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .data-table th, .data-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .data-table th {
+            background-color: var(--light);
+            font-weight: bold;
+        }
+        
+        .data-table tr:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background-color: var(--secondary);
+            color: white;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .btn-warning {
+            background-color: var(--warning);
+            color: white;
+        }
+        
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 0.8rem;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        .form-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .badge-success {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .badge-warning {
+            background-color: var(--warning);
+            color: white;
+        }
+        
+        .badge-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+        
+        .status-pill {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .status-confirmed {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .status-pending {
+            background-color: #fff8e1;
+            color: #ff8f00;
+        }
+        
+        .status-cancelled {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        
+        .search-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .search-container input {
+            flex: 1;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+        
+        .tab.active {
+            border-bottom: 2px solid var(--secondary);
+            font-weight: bold;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .alert-danger {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        
+        .invoice-item {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="logo">SGTA</div>
+            <div class="menu-item active" onclick="loadSection('dashboard')">
+                <i class="fa fa-dashboard"></i> Dashboard
+            </div>
+            <div class="menu-item" onclick="loadSection('calendar')">
+                <i class="fa fa-calendar"></i> Calendario
+            </div>
+            <div class="menu-item" onclick="loadSection('bookings')">
+                <i class="fa fa-book"></i> Reservas
+            </div>
+            <div class="menu-item" onclick="loadSection('activities')">
+                <i class="fa fa-bicycle"></i> Actividades
+            </div>
+            <div class="menu-item" onclick="loadSection('clients')">
+                <i class="fa fa-users"></i> Clientes
+            </div>
+            <div class="menu-item" onclick="loadSection('invoices')">
+                <i class="fa fa-file-text"></i> Facturación
+            </div>
+            <div class="menu-item" onclick="loadSection('expenses')">
+                <i class="fa fa-money"></i> Gastos
+            </div>
+            <div class="menu-item" onclick="loadSection('monitors')">
+                <i class="fa fa-user-secret"></i> Monitores
+            </div>
+            <div class="menu-item" onclick="loadSection('payroll')">
+                <i class="fa fa-euro"></i> Nóminas
+            </div>
+            <div class="menu-item" onclick="loadSection('reports')">
+                <i class="fa fa-bar-chart"></i> Informes
+            </div>
+            <div class="menu-item" onclick="loadSection('settings')">
+                <i class="fa fa-cog"></i> Configuración
+            </div>
+        </div>
+        
+        <div class="main-content" id="main-content">
+            <!-- Dashboard -->
+            <div id="dashboard-section">
+                <div class="dashboard-header">
+                    <h1><i class="fa fa-dashboard"></i> Dashboard</h1>
+                    <div id="current-date"></div>
+                </div>
+                
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <h3><i class="fa fa-book"></i> Reservas Programadas</h3>
+                        <div class="value" id="total-bookings">0</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <h3><i class="fa fa-bicycle"></i> Actividades Disponibles</h3>
+                        <div class="value" id="total-activities">0</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <h3><i class="fa fa-user-secret"></i> Monitores Disponibles</h3>
+                        <div class="value" id="total-monitors">0</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <h3><i class="fa fa-clock-o"></i> Pendientes de Cobro</h3>
+                        <div class="value" id="pending-payments">0</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <h3><i class="fa fa-users"></i> Clientes Registrados</h3>
+                        <div class="value" id="total-clients">0</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <h3><i class="fa fa-calendar-check-o"></i> Reservas de Hoy</h3>
+                        <div class="value" id="today-bookings">0</div>
+                    </div>
+                </div>
+                
+                <div class="finance-summary">
+                    <h2><i class="fa fa-line-chart"></i> Resumen Financiero (<span id="current-year"></span>)</h2>
+                    <div class="finance-row">
+                        <span>Ingresos:</span>
+                        <span id="total-income">0,00 €</span>
+                    </div>
+                    <div class="finance-row">
+                        <span>Gastos:</span>
+                        <span id="total-expenses">0,00 €</span>
+                    </div>
+                    <div class="finance-row total">
+                        <span>Beneficio:</span>
+                        <span id="total-profit">0,00 €</span>
+                    </div>
+                </div>
+                
+                <div class="pending-container">
+                    <div class="pending-card">
+                        <h2><i class="fa fa-exclamation-circle"></i> Reservas Pendientes</h2>
+                        <div id="pending-bookings">
+                            <div class="empty-state">No hay reservas pendientes</div>
+                        </div>
+                    </div>
+                    
+                    <div class="pending-card">
+                        <h2><i class="fa fa-file-text-o"></i> Facturas Pendientes de Cobro</h2>
+                        <div id="pending-invoices">
+                            <div class="empty-state">No hay facturas pendientes</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Calendario -->
+            <div id="calendar-section" style="display:none;">
+                <div class="dashboard-header">
+                    <h1><i class="fa fa-calendar"></i> Calendario</h1>
+                    <div>
+                        <button class="btn btn-primary" onclick="changeMonth(-1)"><i class="fa fa-chevron-left"></i></button>
+                        <span id="current-month" style="margin: 0 15px;"></span>
+                        <button class="btn btn-primary" onclick="changeMonth(1)"><i class="fa fa-chevron-right"></i></button>
+                        <button class="btn btn-success" onclick="resetToToday()" style="margin-left: 10px;">Hoy</button>
+                    </div>
+                </div>
+                
+                <table class="calendar">
+                    <thead>
+                        <tr>
+                            <th>Lun</th>
+                            <th>Mar</th>
+                            <th>Mié</th>
+                            <th>Jue</th>
+                            <th>Vie</th>
+                            <th>Sáb</th>
+                            <th>Dom</th>
+                        </tr>
+                    </thead>
+                    <tbody id="calendar-body"></tbody>
+                </table>
+                
+                <div id="day-details" style="margin-top: 30px; display: none;">
+                    <h3>Reservas para <span id="selected-date"></span></h3>
+                    <div id="day-bookings"></div>
+                </div>
+            </div>
+            
+            <!-- Reservas -->
+            <div id="bookings-section" style="display:none;">
+                <div class="dashboard-header">
+                    <h1><i class="fa fa-book"></i> Gestión de Reservas</h1>
+                    <button class="btn btn-primary" onclick="showBookingForm()">
+                        <i class="fa fa-plus"></i> Nueva Reserva
+                    </button>
+                </div>
+                
+                <div id="booking-form" class="form-container" style="display:none;">
+                    <h2><i class="fa fa-plus-circle"></i> <span id="booking-form-title">Nueva Reserva</span></h2>
+                    <input type="hidden" id="booking-id">
+                    
+                    <div class="form-group">
+                        <label for="booking-client">Cliente:</label>
+                        <select id="booking-client" class="form-control" required></select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="booking-activity">Actividad:</label>
+                        <select id="booking-activity" class="form-control" required></select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="booking-date">Fecha:</label>
+                        <input type="date" id="booking-date" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="booking-time">Hora:</label>
+                        <input type="time" id="booking-time" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="booking-monitor">Monitor:</label>
+                        <select id="booking-monitor" class="form-control" required></select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="booking-status">Estado:</label>
+                        <select id="booking-status" class="form-control" required>
+                            <option value="confirmed">Confirmada</option>
+                            <option value="pending">Pendiente</option>
+                            <option value="cancelled">Cancelada</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="booking-notes">Notas:</label>
+                        <textarea id="booking-notes" class="form-control" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button class="btn btn-success" onclick="saveBooking()">
+                            <i class="fa fa-save"></i> Guardar
+                        </button>
+                        <button class="btn btn-danger" onclick="hideBookingForm()">
+                            <i class="fa fa-times"></i> Cancelar
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="search-container">
+                    <input type="text" id="booking-search" class="form-control" placeholder="Buscar reservas..." oninput="searchBookings()">
+                    <select id="booking-filter-status" class="form-control" onchange="filterBookings()">
+                        <option value="all">Todos los estados</option>
+                        <option value="confirmed">Confirmadas</option>
+                        <option value="pending">Pendientes</option>
+                        <option value="cancelled">Canceladas</option>
+                    </select>
+                </div>
+                
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Cliente</th>
+                            <th>Actividad</th>
+                            <th>Fecha/Hora</th>
+                            <th>Monitor</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bookings-list"></tbody>
+                </table>
+            </div>
+            
+            <!-- Actividades -->
+            <div id="activities-section" style="display:none;">
+                <div class="dashboard-header">
+                    <h1><i class="fa fa-bicycle"></i> Gestión de Actividades</h1>
+                    <button class="btn btn-primary" onclick="showActivityForm()">
+                        <i class="fa fa-plus"></i> Nueva Actividad
+                    </button>
+                </div>
+                
+                <div id="activity-form" class="form-container" style="display:none;">
+                    <h2><i class="fa fa-plus-circle"></i> <span id="activity-form-title">Nueva Actividad</span></h2>
+                    <input type="hidden" id="activity-id">
+                    
+                    <div class="form-group">
+                        <label for="activity-name">Nombre:</label>
+                        <input type="text" id="activity-name" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="activity-description">Descripción:</label>
+                        <textarea id="activity-description" class="form-control" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="activity-duration">Duración (horas):</label>
+                        <input type="number" id="activity-duration" class="form-control" min="0.5" step="0.5" value="1" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="activity-price">Precio (€):</label>
+                        <input type="number" id="activity-price" class="form-control" min="0" step="0.01" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="activity-max-participants">Máx. participantes:</label>
+                        <input type="number" id="activity-max-participants" class="form-control" min="1" value="10" required>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button class="btn btn-success" onclick="saveActivity()">
+                            <i class="fa fa-save"></i> Guardar
+                        </button>
+                        <button class="btn btn-danger" onclick="hideActivityForm()">
+                            <i class="fa fa-times"></i> Cancelar
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="search-container">
+                    <input type="text" id="activity-search" class="form-control" placeholder="Buscar actividades..." oninput="searchActivities()">
+                </div>
+                
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Duración</th>
+                            <th>Precio</th>
+                            <th>Participantes</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="activities-list"></tbody>
+                </table>
+            </div>
+            
+            <!-- Clientes -->
+            <div id="clients-section" style="display:none;">
+                <div class="dashboard-header">
+                    <h1><i class="fa fa-users"></i> Gestión de Clientes</h1>
+                    <button class="btn btn-primary" onclick="showClientForm()">
+                        <i class="fa fa-plus"></i> Nuevo Cliente
+                    </button>
+                </div>
+                
+                <div id="client-form" class="form-container" style="display:none;">
+                    <h2><i class="fa fa-plus-circle"></i> <span id="client-form-title">Nuevo Cliente</span></h2>
+                    <input type="hidden" id="client-id">
+                    
+                    <div class="form-group">
+                        <label for="client-name">Nombre:</label>
+                        <input type="text" id="client-name" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="client-email">Email:</label>
+                        <input type="email" id="client-email" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="client-phone">Teléfono:</label>
+                        <input type="tel" id="client-phone" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="client-dni">DNI/NIE:</label>
+                        <input type="text" id="client-dni" class="form-control">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="client-address">Dirección:</label>
+                        <input type="text" id="client-address" class="form-control">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="client-notes">Notas:</label>
+                        <textarea id="client-notes" class="form-control" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button class="btn btn-success" onclick="saveClient()">
+                            <i class="fa fa-save"></i> Guardar
+                        </button>
+                        <button class="btn btn-danger" onclick="hideClientForm()">
+                            <i class="fa fa-times"></i> Cancelar
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="search-container">
+                    <input type="text" id="client-search" class="form-control" placeholder="Buscar clientes..." oninput="searchClients()">
+                </div>
+                
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Teléfono</th>
+                            <th>Reservas</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clients-list"></tbody>
+                </table>
+            </div>
+            
+            <!-- Facturación -->
+            <div id="invoices-section" style="display:none;">
+                <div class="dashboard-header">
+                    <h1><i class="fa fa-file-text"></i> Gestión de Facturación</h1>
+                    <button class="btn btn-primary" onclick="showInvoiceForm()">
+                        <i class="fa fa-plus"></i> Nueva Factura
+                    </button>
+                </div>
+                
+                <div id="invoice-form" class="form-container" style="display:none;">
+                    <h2><i class="fa fa-plus-circle"></i> <span id="invoice-form-title">Nueva Factura</span></h2>
+                    <input type="hidden" id="invoice-id">
+                    
+                    <div class="form-group">
+                        <label for="invoice-client">Cliente:</label>
+                        <select id="invoice-client" class="form-control" required></select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="invoice-date">Fecha:</label>
+                        <input type="date" id="invoice-date" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="invoice-number">Número de factura:</label>
+                        <input type="text" id="invoice-number" class="form-control" required>
+                    </div>
+                    
+                    <h3>Líneas de factura</h3>
+                    <div id="invoice-items">
+                        <div class="invoice-item">
+                            <div class="form-group">
+                                <label>Descripción:</label>
+                                <input type="text" class="form-control item-description" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Cantidad:</label>
+                                <input type="number" class="form-control item-quantity" min="1" value="1" required onchange="calculateInvoiceTotal()">
+                            </div>
+                            <div class="form-group">
+                                <label>Precio unitario (€):</label>
+                                <input type="number" class="form-control item-price" min="0" step="0.01" required onchange="calculateInvoiceTotal()">
+                            </div>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="removeInvoiceItem(this)">
+                                <i class="fa fa-trash"></i> Eliminar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <button type="button" class="btn btn-primary" onclick="addInvoiceItem()">
+                        <i class="fa fa-plus"></i> Añadir línea
+                    </button>
+                    
+                    <div class="form-group">
+                        <label for="invoice-notes">Notas:</label>
+                        <textarea id="invoice-notes" class="form-control" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="finance-summary" style="margin-top: 20px;">
+                        <div class="finance-row">
+                            <span>Subtotal:</span>
+                            <span id="invoice-subtotal">0,00 €</span>
+                        </div>
+                        <div class="finance-row">
+                            <span>IVA (21%):</span>
+                            <span id="invoice-tax">0,00 €</span>
+                        </div>
+                        <div class="finance-row total">
+                            <span>Total:</span>
+                            <span id="invoice-total">0,00 €</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button class="btn btn-success" onclick="saveInvoice()">
+                            <i class="fa fa-save"></i> Guardar Factura
+                        </button>
+                        <button class="btn btn-primary" onclick="printInvoice()">
+                            <i class="fa fa-print"></i> Imprimir
+                        </button>
+                        <button class="btn btn-danger" onclick="hideInvoiceForm()">
+                            <i class="fa fa-times"></i> Cancelar
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="search-container">
+                    <input type="text" id="invoice-search" class="form-control" placeholder="Buscar facturas..." oninput="searchInvoices()">
+                    <select id="invoice-filter-status" class="form-control" onchange="filterInvoices()">
+                        <option value="all">Todas</option>
+                        <option value="paid">Pagadas</option>
+                        <option value="pending">Pendientes</option>
+                    </select>
+                </div>
+                
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Número</th>
+                            <th>Cliente</th>
+                            <th>Fecha</th>
+                            <th>Total</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="invoices-list"></tbody>
+                </table>
+            </div>
+            
+            <!-- Gastos -->
+            <div id="expenses-section" style="display:none;">
+                <div class="dashboard-header">
+                    <h1><i class="fa fa-money"></i> Gestión de Gastos</h1>
+                    <button class="btn btn-primary" onclick="showExpenseForm()">
+                        <i class="fa fa-plus"></i> Nuevo Gasto
+                    </button>
+                </div>
+                
+                <div id="expense-form" class="form-container" style="display:none;">
+                    <h2><i class="fa fa-plus-circle"></i> <span id="expense-form-title">Nuevo Gasto</span></h2>
+                    <input type="hidden" id="expense-id">
+                    
+                    <div class="form-group">
+                        <label for="expense-description">Descripción:</label>
+                        <input type="text" id="expense-description" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="expense-amount">Importe (€):</label>
+                        <input type="number" id="expense-amount" class="form-control" min="0" step="0.01" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="expense-date">Fecha:</label>
+                        <input type="date" id="expense-date" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="expense-category">Categoría:</label>
+                        <select id="expense-category" class="form-control" required>
+                            <option value="supplies">Suministros</option>
+                            <option value="equipment">Equipamiento</option>
+                            <option value="salaries">Salarios</option>
+                            <option value="maintenance">Mantenimiento</option>
+                            <option value="other">Otros</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="expense-notes">Notas:</label>
+                        <textarea id="expense-notes" class="form-control" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button class="btn btn-success" onclick="saveExpense()">
+                            <i class="fa fa-save"></i> Guardar
+                        </button>
+                        <button class="btn btn-danger" onclick="hideExpenseForm()">
+                            <i class="fa fa-times"></i> Cancelar
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="search-container">
+                    <input type="text" id="expense-search" class="form-control" placeholder="Buscar gastos..." oninput="searchExpenses()">
+                </div>
+                
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Descripción</th>
+                            <th>Categoría</th>
+                            <th>Importe</th>
+                            <th>Notas</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expenses-list"></tbody>
+                </table>
+            </div>
+            
+            <!-- Monitores -->
+            <div id="monitors-section" style="display:none;">
+                <div class="dashboard-header">
+                    <h1><i class="fa fa-user-secret"></i> Gestión de Monitores</h1>
+                    <button class="btn btn-primary" onclick="showMonitorForm()">
+                        <i class="fa fa-plus"></i> Nuevo Monitor
+                    </button>
+                </div>
+                
+                <div id="monitor-form" class="form-container" style="display:none;">
+                    <h2><i class="fa fa-plus-circle"></i> <span id="monitor-form-title">Nuevo Monitor</span></h2>
+                    <input type="hidden" id="monitor-id">
+                    
+                    <div class="form-group">
+                        <label for="monitor-name">Nombre:</label>
+                        <input type="text" id="monitor-name" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="monitor-email">Email:</label>
+                        <input type="email" id="monitor-email" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="monitor-phone">Teléfono:</label>
+                        <input type="tel" id="monitor-phone" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="monitor-specialty">Especialidad:</label>
+                        <input type="text" id="monitor-specialty" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="monitor-active" checked> Activo
+                        </label>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button class="btn btn-success" onclick="saveMonitor()">
+                            <i class="fa fa-save"></i> Guardar
+                        </button>
+                        <button class="btn btn-danger" onclick="hideMonitorForm()">
+                            <i class="fa fa-times"></i> Cancelar
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="search-container">
+                    <input type="text" id="monitor-search" class="form-control" placeholder="Buscar monitores..." oninput="searchMonitors()">
+                </div>
+                
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Teléfono</th>
+                            <th>Especialidad</th>
+                            <th>Reservas</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="monitors-list"></tbody>
+                </table>
+            </div>
+            
+            <!-- Nóminas -->
+            <div id="payroll-section" style="display:none;">
+                <div class="dashboard-header">
+                    <h1><i class="fa fa-euro"></i> Gestión de Nóminas</h1>
+                    <button class="btn btn-primary" onclick="showPayrollForm()">
+                        <i class="fa fa-plus"></i> Nueva Nómina
+                    </button>
+                </div>
+                
+                <div id="payroll-form" class="form-container" style="display:none;">
+                    <h2><i class="fa fa-plus-circle"></i> <span id="payroll-form-title">Nueva Nómina</span></h2>
+                    <input type="hidden" id="payroll-id">
+                    
+                    <div class="form-group">
+                        <label for="payroll-monitor">Monitor:</label>
+                        <select id="payroll-monitor" class="form-control" required onchange="calculatePayrollTotal()"></select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="payroll-month">Mes:</label>
+                        <select id="payroll-month" class="form-control" required onchange="calculatePayrollTotal()">
+                            <option value="1">Enero</option>
+                            <option value="2">Febrero</option>
+                            <option value="3">Marzo</option>
+                            <option value="4">Abril</option>
+                            <option value="5">Mayo</option>
+                            <option value="6">Junio</option>
+                            <option value="7">Julio</option>
+                            <option value="8">Agosto</option>
+                            <option value="9">Septiembre</option>
+                            <option value="10">Octubre</option>
+                            <option value="11">Noviembre</option>
+                            <option value="12">Diciembre</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="payroll-year">Año:</label>
+                        <input type="number" id="payroll-year" class="form-control" min="2020" max="2030" required onchange="calculatePayrollTotal()">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="payroll-hours">Horas trabajadas:</label>
+                        <input type="number" id="payroll-hours" class="form-control" min="0" step="0.5" required onchange="calculatePayrollTotal()">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="payroll-hourly-rate">Tarifa por hora (€):</label>
+                        <input type="number" id="payroll-hourly-rate" class="form-control" min="0" step="0.01" required onchange="calculatePayrollTotal()">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="payroll-bonus">Bonificación (€):</label>
+                        <input type="number" id="payroll-bonus" class="form-control" min="0" step="0.01" value="0" onchange="calculatePayrollTotal()">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="payroll-deductions">Deducciones (€):</label>
+                        <input type="number" id="payroll-deductions" class="form-control" min="0" step="0.01" value="0" onchange="calculatePayrollTotal()">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="payroll-notes">Notas:</label>
+                        <textarea id="payroll-notes" class="form-control" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="finance-summary" style="margin-top: 20px;">
+                        <div class="finance-row">
+                            <span>Salario base:</span>
+                            <span id="payroll-base-salary">0,00 €</span>
+                        </div>
+                        <div class="finance-row total">
+                            <span>Total a pagar:</span>
+                            <span id="payroll-total">0,00 €</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button class="btn btn-success" onclick="savePayroll()">
+                            <i class="fa fa-save"></i> Guardar
+                        </button>
+                        <button class="btn btn-danger" onclick="hidePayrollForm()">
+                            <i class="fa fa-times"></i> Cancelar
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="search-container">
+                    <input type="text" id="payroll-search" class="form-control" placeholder="Buscar nóminas..." oninput="searchPayrolls()">
+                </div>
+                
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Monitor</th>
+                            <th>Periodo</th>
+                            <th>Horas</th>
+                            <th>Tarifa/h</th>
+                            <th>Base</th>
+                            <th>Total</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="payrolls-list"></tbody>
+                </table>
+            </div>
+            
+            <!-- Informes -->
+            <div id="reports-section" style="display:none;">
+                <div class="dashboard-header">
+                    <h1><i class="fa fa-bar-chart"></i> Informes</h1>
+                </div>
+                
+                <div class="form-container">
+                    <h2>Generar Informe</h2>
+                    
+                    <div class="form-group">
+                        <label for="report-type">Tipo de informe:</label>
+                        <select id="report-type" class="form-control">
+                            <option value="monthly-income">Ingresos mensuales</option>
+                            <option value="monthly-expenses">Gastos mensuales</option>
+                            <option value="activity-popularity">Popularidad de actividades</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="report-year">Año:</label>
+                        <input type="number" id="report-year" class="form-control" min="2020" max="2030" value="${new Date().getFullYear()}">
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="generateFinancialReport()">
+                        <i class="fa fa-file-text"></i> Generar Informe
+                    </button>
+                </div>
+                
+                <div id="report-results" style="margin-top: 30px;"></div>
+            </div>
+            
+            <!-- Configuración -->
+            <div id="settings-section" style="display:none;">
+                <div class="dashboard-header">
+                    <h1><i class="fa fa-cog"></i> Configuración</h1>
+                </div>
+                
+                <div class="form-container">
+                    <h2>Configuración General</h2>
+                    
+                    <div class="form-group">
+                        <label for="setting-company-name">Nombre de la empresa:</label>
+                        <input type="text" id="setting-company-name" class="form-control">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="setting-company-address">Dirección:</label>
+                        <input type="text" id="setting-company-address" class="form-control">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="setting-company-phone">Teléfono:</label>
+                        <input type="text" id="setting-company-phone" class="form-control">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="setting-company-email">Email:</label>
+                        <input type="email" id="setting-company-email" class="form-control">
+                    </div>
+                    
+                    <h2>Configuración de Facturación</h2>
+                    
+                    <div class="form-group">
+                        <label for="setting-invoice-prefix">Prefijo de factura:</label>
+                        <input type="text" id="setting-invoice-prefix" class="form-control">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="setting-invoice-sequence">Siguiente número de factura:</label>
+                        <input type="number" id="setting-invoice-sequence" class="form-control" min="1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="setting-iva-percentage">Porcentaje de IVA (%):</label>
+                        <input type="number" id="setting-iva-percentage" class="form-control" min="0" max="100" step="0.1">
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button class="btn btn-success" onclick="saveSettings()">
+                            <i class="fa fa-save"></i> Guardar Configuración
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Datos iniciales
+        let data = {
+            bookings: [],
+            activities: [],
+            clients: [],
+            invoices: [],
+            expenses: [],
+            monitors: [],
+            payrolls: [],
+            settings: {}
+        };
+        
+        // Variables de estado
+        let currentSection = 'dashboard';
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+        let selectedDate = null;
+        
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+            initDashboard();
+            setupEventListeners();
+            
+            // Mostrar fecha actual
+            const today = new Date();
+            document.getElementById('current-date').textContent = `Fecha: ${formatDate(today)}`;
+            document.getElementById('current-year').textContent = today.getFullYear();
+            
+            // Generar número de factura por defecto
+            generateInvoiceNumber();
+        });
+        
+        function loadData() {
+            const savedData = localStorage.getItem('sgta-data');
+            if (savedData) {
+                data = JSON.parse(savedData);
+            } else {
+                // Datos de ejemplo para la demo
+                data = {
+                    bookings: [
+                        {
+                            id: 1,
+                            clientId: 1,
+                            activityId: 1,
+                            date: formatDate(new Date()),
+                            time: "10:00",
+                            monitorId: 1,
+                            status: "confirmed",
+                            notes: "Primera clase de surf"
+                        },
+                        {
+                            id: 2,
+                            clientId: 2,
+                            activityId: 2,
+                            date: formatDate(new Date()),
+                            time: "12:00",
+                            monitorId: 2,
+                            status: "confirmed",
+                            notes: ""
+                        },
+                        {
+                            id: 3,
+                            clientId: 3,
+                            activityId: 1,
+                            date: formatDate(new Date(new Date().setDate(new Date().getDate() + 1))),
+                            time: "15:00",
+                            monitorId: 1,
+                            status: "pending",
+                            notes: "Esperando confirmación de pago"
+                        }
+                    ],
+                    activities: [
+                        {
+                            id: 1,
+                            name: "1 clase de surf",
+                            description: "Clase básica de surf para principiantes",
+                            duration: 2,
+                            price: 40, // IVA incluido
+                            maxParticipants: 8,
+                            type: "surf_lesson"
+                        },
+                        {
+                            id: 2,
+                            name: "2 clases de surf",
+                            price: 80,
+                            type: "surf_lesson_pack"
+                        },
+                        {
+                            id: 3,
+                            name: "5 clases de surf",
+                            price: 180,
+                            type: "surf_lesson_pack"
+                        },
+                        {
+                            id: 4,
+                            name: "10 clases de surf",
+                            price: 350,
+                            type: "surf_lesson_pack"
+                        },
+                        {
+                            id: 5,
+                            name: "1 clase de paddle surf",
+                            description: "Clase de paddle surf en aguas tranquilas",
+                            duration: 1.5,
+                            price: 30,
+                            maxParticipants: 6,
+                            type: "paddle_lesson"
+                        },
+                        {
+                            id: 6,
+                            name: "2 clases de paddle surf",
+                            price: 60,
+                            type: "paddle_lesson_pack"
+                        },
+                        {
+                            id: 7,
+                            name: "5 clases de paddle surf",
+                            price: 140,
+                            type: "paddle_lesson_pack"
+                        },
+                        {
+                            id: 8,
+                            name: "10 clases de paddle surf",
+                            price: 270,
+                            type: "paddle_lesson_pack"
+                        },
+                        {
+                            id: 9,
+                            name: "Alquiler equipo de surf (1 día)",
+                            price: 25,
+                            type: "equipment_rental"
+                        },
+                        {
+                            id: 10,
+                            name: "Alquiler equipo de paddle surf (1 día)",
+                            price: 20,
+                            type: "equipment_rental"
+                        }
+                    ],
+                    clients: [
+                        {
+                            id: 1,
+                            name: "Juan Pérez",
+                            email: "juan@example.com",
+                            phone: "600111222",
+                            dni: "12345678A",
+                            notes: "Cliente habitual"
+                        },
+                        {
+                            id: 2,
+                            name: "María García",
+                            email: "maria@example.com",
+                            phone: "600222333",
+                            dni: "87654321B",
+                            notes: ""
+                        },
+                        {
+                            id: 3,
+                            name: "Carlos López",
+                            email: "carlos@example.com",
+                            phone: "600333444",
+                            dni: "45678912C",
+                            notes: "Prefiere clases por la tarde"
+                        }
+                    ],
+                    monitors: [
+                        {
+                            id: 1,
+                            name: "Ana Martínez",
+                            email: "ana@surfschool.com",
+                            phone: "611111111",
+                            specialty: "Surf, Paddle Surf",
+                            active: true
+                        },
+                        {
+                            id: 2,
+                            name: "David Sánchez",
+                            email: "david@surfschool.com",
+                            phone: "622222222",
+                            specialty: "Kitesurf",
+                            active: true
+                        },
+                        {
+                            id: 3,
+                            name: "Laura Gómez",
+                            email: "laura@surfschool.com",
+                            phone: "633333333",
+                            specialty: "Surf, Yoga",
+                            active: false
+                        }
+                    ],
+                    invoices: [
+                        {
+                            id: 1,
+                            number: "2023-001",
+                            clientId: 1,
+                            date: formatDate(new Date(new Date().setDate(new Date().getDate() - 5))),
+                            items: [
+                                { description: "Clase de surf", quantity: 1, price: 40 }
+                            ],
+                            notes: "Pago en efectivo",
+                            status: "paid"
+                        },
+                        {
+                            id: 2,
+                            number: "2023-002",
+                            clientId: 2,
+                            date: formatDate(new Date()),
+                            items: [
+                                { description: "Clase de paddle surf", quantity: 2, price: 30 }
+                            ],
+                            notes: "Pendiente de transferencia",
+                            status: "pending"
+                        }
+                    ],
+                    expenses: [
+                        {
+                            id: 1,
+                            description: "Compra de tablas de surf",
+                            amount: 1200,
+                            date: formatDate(new Date(new Date().setDate(new Date().getDate() - 10))),
+                            category: "equipment",
+                            notes: "3 tablas nuevas"
+                        },
+                        {
+                            id: 2,
+                            description: "Material de oficina",
+                            amount: 85.50,
+                            date: formatDate(new Date()),
+                            category: "supplies",
+                            notes: ""
+                        }
+                    ],
+                    payrolls: [
+                        {
+                            id: 1,
+                            monitorId: 1,
+                            month: new Date().getMonth() + 1,
+                            year: new Date().getFullYear(),
+                            hours: 80,
+                            hourlyRate: 12,
+                            bonus: 100,
+                            deductions: 50,
+                            notes: "Horas extras incluídas",
+                            paid: true
+                        },
+                        {
+                            id: 2,
+                            monitorId: 2,
+                            month: new Date().getMonth() + 1,
+                            year: new Date().getFullYear(),
+                            hours: 60,
+                            hourlyRate: 15,
+                            bonus: 0,
+                            deductions: 30,
+                            notes: "",
+                            paid: false
+                        }
+                    ],
+                    settings: {
+                        invoicePrefix: "FAC",
+                        invoiceSequence: 3,
+                        ivaPercentage: 21,
+                        companyName: "Turismo Activo Aventura",
+                        companyAddress: "Calle del Mar, 123, Playa del Sol",
+                        companyPhone: "900 123 456",
+                        companyEmail: "info@turismoactivoaventura.com"
+                    }
+                };
+                saveData();
+            }
+        }
+        
+        // Función para guardar los datos en localStorage
+        function saveData() {
+            localStorage.setItem('sgta-data', JSON.stringify(data));
+        }
+        
+        // Función para formatear fechas
+        function formatDate(date) {
+            const d = new Date(date);
+            let month = '' + (d.getMonth() + 1);
+            let day = '' + d.getDate();
+            const year = d.getFullYear();
+        
+            if (month.length < 2) month = '0' + month;
+            if (day.length < 2) day = '0' + day;
+        
+            return [year, month, day].join('-');
+        }
+        
+        // Función para generar IDs únicos
+        function generateId(collection) {
+            return collection.length > 0 ? Math.max(...collection.map(item => item.id)) + 1 : 1;
+        }
+        
+        // Función para cargar una sección
+        function loadSection(section) {
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector(`.menu-item[onclick="loadSection('${section}')"]`).classList.add('active');
+            
+            document.querySelectorAll('#main-content > div').forEach(div => {
+                div.style.display = 'none';
+            });
+            document.getElementById(`${section}-section`).style.display = 'block';
+            
+            currentSection = section;
+            
+            // Actualizar la sección específica
+            switch(section) {
+                case 'dashboard':
+                    initDashboard();
+                    break;
+                case 'calendar':
+                    renderCalendar();
+                    break;
+                case 'bookings':
+                    renderBookings();
+                    loadClientSelect('booking-client');
+                    loadActivitySelect('booking-activity');
+                    loadMonitorSelect('booking-monitor');
+                    break;
+                case 'activities':
+                    renderActivities();
+                    break;
+                case 'clients':
+                    renderClients();
+                    break;
+                case 'invoices':
+                    renderInvoices();
+                    loadClientSelect('invoice-client');
+                    calculateInvoiceTotal();
+                    break;
+                case 'expenses':
+                    renderExpenses();
+                    break;
+                case 'monitors':
+                    renderMonitors();
+                    break;
+                case 'payroll':
+                    renderPayrolls();
+                    loadMonitorSelect('payroll-monitor');
+                    break;
+                case 'reports':
+                    // No necesita inicialización especial
+                    break;
+                case 'settings':
+                    loadSettings();
+                    break;
+            }
+        }
+        
+        // Configuración inicial
+        function setupEventListeners() {
+            // Para el calendario
+            document.getElementById('current-month').textContent = new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+            
+            // Para los selects que necesitan ser cargados
+            loadClientSelect('booking-client');
+            loadActivitySelect('booking-activity');
+            loadMonitorSelect('booking-monitor');
+            loadClientSelect('invoice-client');
+            loadMonitorSelect('payroll-monitor');
+            
+            // Cargar configuración
+            loadSettings();
+            
+            // Inicializar secciones
+            renderBookings();
+            renderActivities();
+            renderClients();
+            renderInvoices();
+            renderExpenses();
+            renderMonitors();
+            renderPayrolls();
+            renderCalendar();
+        }
+        
+        // Inicializar dashboard
+        function initDashboard() {
+            // Actualizar estadísticas
+            document.getElementById('total-bookings').textContent = data.bookings.length;
+            document.getElementById('total-activities').textContent = data.activities.length;
+            document.getElementById('total-monitors').textContent = data.monitors.filter(m => m.active).length;
+            document.getElementById('total-clients').textContent = data.clients.length;
+            
+            // Reservas de hoy
+            const today = formatDate(new Date());
+            const todayBookings = data.bookings.filter(booking => booking.date === today).length;
+            document.getElementById('today-bookings').textContent = todayBookings;
+            
+            // Facturas pendientes de cobro
+            const pendingInvoices = data.invoices.filter(invoice => invoice.status === 'pending').length;
+            document.getElementById('pending-payments').textContent = pendingInvoices;
+            
+            // Resumen financiero
+            updateFinancialSummary();
+            
+            // Reservas pendientes
+            updatePendingBookings();
+            
+            // Facturas pendientes
+            updatePendingInvoices();
+        }
+        
+        // Actualizar resumen financiero
+        function updateFinancialSummary() {
+            // Calcular ingresos (facturas pagadas)
+            const income = data.invoices
+                .filter(invoice => invoice.status === 'paid')
+                .reduce((sum, invoice) => {
+                    const subtotal = invoice.items.reduce((itemSum, item) => itemSum + (item.quantity * item.price), 0);
+                    const ivaPercentage = data.settings.ivaPercentage || 21;
+                    const tax = subtotal * (ivaPercentage / 100);
+                    return sum + subtotal + tax;
+                }, 0);
+            
+            // Calcular gastos
+            const expenses = data.expenses.reduce((sum, expense) => sum + expense.amount, 0) +
+                            data.payrolls.filter(p => p.paid).reduce((sum, payroll) => sum + (payroll.hours * payroll.hourlyRate + payroll.bonus - payroll.deductions), 0);
+            
+            const profit = income - expenses;
+            
+            document.getElementById('total-income').textContent = income.toFixed(2) + ' €';
+            document.getElementById('total-expenses').textContent = expenses.toFixed(2) + ' €';
+            document.getElementById('total-profit').textContent = profit.toFixed(2) + ' €';
+        }
+        
+        // Actualizar reservas pendientes en dashboard
+        function updatePendingBookings() {
+            const pendingBookingsContainer = document.getElementById('pending-bookings');
+            pendingBookingsContainer.innerHTML = '';
+            
+            // Obtener reservas pendientes (estado pending o próximas)
+            const today = new Date();
+            const pending = data.bookings
+                .filter(booking => booking.status === 'pending' || 
+                                (new Date(booking.date) >= today && booking.status !== 'cancelled'))
+                .sort((a, b) => new Date(a.date) - new Date(b.date))
+                .slice(0, 5); // Mostrar máximo 5
+            
+            if (pending.length === 0) {
+                pendingBookingsContainer.innerHTML = '<div class="empty-state">No hay reservas pendientes</div>';
+                return;
+            }
+            
+            pending.forEach(booking => {
+                const client = data.clients.find(c => c.id === booking.clientId);
+                const activity = data.activities.find(a => a.id === booking.activityId);
+                
+                const bookingDiv = document.createElement('div');
+                bookingDiv.style.padding = '10px';
+                bookingDiv.style.borderBottom = '1px solid #eee';
+                
+                let statusClass = '';
+                let statusText = '';
+                switch(booking.status) {
+                    case 'confirmed':
+                        statusClass = 'status-confirmed';
+                        statusText = 'Confirmada';
+                        break;
+                    case 'pending':
+                        statusClass = 'status-pending';
+                        statusText = 'Pendiente';
+                        break;
+                    case 'cancelled':
+                        statusClass = 'status-cancelled';
+                        statusText = 'Cancelada';
+                        break;
+                }
+                
+                bookingDiv.innerHTML = `
+                    <div style="font-weight: bold;">${activity ? activity.name : 'Actividad no encontrada'}</div>
+                    <div>${client ? client.name : 'Cliente no encontrado'} - ${formatDate(booking.date)} ${booking.time}</div>
+                    <div><span class="${statusClass}">${statusText}</span></div>
+                `;
+                
+                pendingBookingsContainer.appendChild(bookingDiv);
+            });
+        }
+        
+        // Actualizar facturas pendientes en dashboard
+        function updatePendingInvoices() {
+            const pendingInvoicesContainer = document.getElementById('pending-invoices');
+            pendingInvoicesContainer.innerHTML = '';
+            
+            // Obtener facturas pendientes
+            const pending = data.invoices
+                .filter(invoice => invoice.status === 'pending')
+                .sort((a, b) => new Date(a.date) - new Date(b.date))
+                .slice(0, 5); // Mostrar máximo 5
+            
+            if (pending.length === 0) {
+                pendingInvoicesContainer.innerHTML = '<div class="empty-state">No hay facturas pendientes</div>';
+                return;
+            }
+            
+            pending.forEach(invoice => {
+                const client = data.clients.find(c => c.id === invoice.clientId);
+                
+                // Calcular total
+                const subtotal = invoice.items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+                const ivaPercentage = data.settings.ivaPercentage || 21;
+                const tax = subtotal * (ivaPercentage / 100);
+                const total = subtotal + tax;
+                
+                const invoiceDiv = document.createElement('div');
+                invoiceDiv.style.padding = '10px';
+                invoiceDiv.style.borderBottom = '1px solid #eee';
+                
+                invoiceDiv.innerHTML = `
+                    <div style="font-weight: bold;">${invoice.number}</div>
+                    <div>${client ? client.name : 'Cliente no encontrado'} - ${formatDate(invoice.date)}</div>
+                    <div>${total.toFixed(2)} €</div>
+                `;
+                
+                pendingInvoicesContainer.appendChild(invoiceDiv);
+            });
+        }
+        
+        // ==================== SECCIÓN DE RESERVAS ====================
+        
+        // Mostrar formulario de reserva
+        function showBookingForm(bookingId = null) {
+            const form = document.getElementById('booking-form');
+            form.style.display = 'block';
+            
+            if (bookingId) {
+                document.getElementById('booking-form-title').textContent = 'Editar Reserva';
+                const booking = data.bookings.find(b => b.id === bookingId);
+                
+                document.getElementById('booking-id').value = booking.id;
+                document.getElementById('booking-client').value = booking.clientId;
+                document.getElementById('booking-activity').value = booking.activityId;
+                document.getElementById('booking-date').value = booking.date;
+                document.getElementById('booking-time').value = booking.time;
+                document.getElementById('booking-monitor').value = booking.monitorId;
+                document.getElementById('booking-status').value = booking.status;
+                document.getElementById('booking-notes').value = booking.notes || '';
+            } else {
+                document.getElementById('booking-form-title').textContent = 'Nueva Reserva';
+                document.getElementById('booking-id').value = '';
+                document.getElementById('booking-client').value = '';
+                document.getElementById('booking-activity').value = '';
+                document.getElementById('booking-date').value = formatDate(new Date());
+                document.getElementById('booking-time').value = '10:00';
+                document.getElementById('booking-monitor').value = '';
+                document.getElementById('booking-status').value = 'confirmed';
+                document.getElementById('booking-notes').value = '';
+            }
+        }
+        
+        // Ocultar formulario de reserva
+        function hideBookingForm() {
+            document.getElementById('booking-form').style.display = 'none';
+        }
+        
+        // Guardar reserva
+        function saveBooking() {
+            const id = document.getElementById('booking-id').value;
+            const clientId = parseInt(document.getElementById('booking-client').value);
+            const activityId = parseInt(document.getElementById('booking-activity').value);
+            const date = document.getElementById('booking-date').value;
+            const time = document.getElementById('booking-time').value;
+            const monitorId = parseInt(document.getElementById('booking-monitor').value);
+            const status = document.getElementById('booking-status').value;
+            const notes = document.getElementById('booking-notes').value;
+            
+            if (!clientId || !activityId || !date || !time || !monitorId) {
+                alert('Por favor complete todos los campos obligatorios');
+                return;
+            }
+            
+            const bookingData = {
+                id: id ? parseInt(id) : generateId(data.bookings),
+                clientId,
+                activityId,
+                date,
+                time,
+                monitorId,
+                status,
+                notes: notes || ''
+            };
+            
+            if (id) {
+                // Editar reserva existente
+                const index = data.bookings.findIndex(b => b.id === parseInt(id));
+                if (index !== -1) {
+                    data.bookings[index] = bookingData;
+                }
+            } else {
+                // Añadir nueva reserva
+                data.bookings.push(bookingData);
+            }
+            
+            saveData();
+            hideBookingForm();
+            renderBookings();
+            initDashboard(); // Actualizar dashboard
+            if (currentSection === 'calendar') renderCalendar();
+        }
+        
+        // Renderizar lista de reservas
+        function renderBookings(filter = '', statusFilter = 'all') {
+            const bookingsList = document.getElementById('bookings-list');
+            bookingsList.innerHTML = '';
+            
+            let filteredBookings = [...data.bookings];
+            
+            // Aplicar filtro de búsqueda
+            if (filter) {
+                const lowerFilter = filter.toLowerCase();
+                filteredBookings = filteredBookings.filter(booking => {
+                    const client = data.clients.find(c => c.id === booking.clientId);
+                    const activity = data.activities.find(a => a.id === booking.activityId);
+                    const monitor = data.monitors.find(m => m.id === booking.monitorId);
+                    
+                    return (
+                        (client && client.name.toLowerCase().includes(lowerFilter)) ||
+                        (activity && activity.name.toLowerCase().includes(lowerFilter)) ||
+                        (monitor && monitor.name.toLowerCase().includes(lowerFilter)) ||
+                        booking.date.includes(filter) ||
+                        booking.time.includes(filter)
+                    );
+                });
+            }
+            
+            // Aplicar filtro de estado
+            if (statusFilter !== 'all') {
+                filteredBookings = filteredBookings.filter(booking => booking.status === statusFilter);
+            }
+            
+            // Ordenar por fecha más reciente primero
+            filteredBookings.sort((a, b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time));
+            
+            if (filteredBookings.length === 0) {
+                bookingsList.innerHTML = '<tr><td colspan="7" class="empty-state">No se encontraron reservas</td></tr>';
+                return;
+            }
+            
+            filteredBookings.forEach(booking => {
+                const client = data.clients.find(c => c.id === booking.clientId);
+                const activity = data.activities.find(a => a.id === booking.activityId);
+                const monitor = data.monitors.find(m => m.id === booking.monitorId);
+                
+                const row = document.createElement('tr');
+                
+                let statusClass = '';
+                let statusText = '';
+                switch(booking.status) {
+                    case 'confirmed':
+                        statusClass = 'status-confirmed';
+                        statusText = 'Confirmada';
+                        break;
+                    case 'pending':
+                        statusClass = 'status-pending';
+                        statusText = 'Pendiente';
+                        break;
+                    case 'cancelled':
+                        statusClass = 'status-cancelled';
+                        statusText = 'Cancelada';
+                        break;
+                }
+                
+                row.innerHTML = `
+                    <td>${booking.id}</td>
+                    <td>${client ? client.name : 'Cliente no encontrado'}</td>
+                    <td>${activity ? activity.name : 'Actividad no encontrada'}</td>
+                    <td>${formatDate(booking.date)} ${booking.time}</td>
+                    <td>${monitor ? monitor.name : 'Monitor no encontrado'}</td>
+                    <td><span class="${statusClass}">${statusText}</span></td>
+                    <td>
+                        <button class="btn btn-primary btn-sm" onclick="showBookingForm(${booking.id})">
+                            <i class="fa fa-edit"></i> Editar
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteBooking(${booking.id})">
+                            <i class="fa fa-trash"></i> Eliminar
+                        </button>
+                    </td>
+                `;
+                
+                bookingsList.appendChild(row);
+            });
+        }
+        
+        // Eliminar reserva
+        function deleteBooking(id) {
+            if (confirm('¿Está seguro de que desea eliminar esta reserva?')) {
+                data.bookings = data.bookings.filter(booking => booking.id !== id);
+                saveData();
+                renderBookings();
+                initDashboard();
+                if (currentSection === 'calendar') renderCalendar();
+            }
+        }
+        
+        // Buscar reservas
+        function searchBookings() {
+            const filter = document.getElementById('booking-search').value;
+            renderBookings(filter, document.getElementById('booking-filter-status').value);
+        }
+        
+        // Filtrar reservas por estado
+        function filterBookings() {
+            const statusFilter = document.getElementById('booking-filter-status').value;
+            const filter = document.getElementById('booking-search').value;
+            renderBookings(filter, statusFilter);
+        }
+        
+        // ==================== SECCIÓN DE ACTIVIDADES ====================
+        
+        // Mostrar formulario de actividad
+        function showActivityForm(activityId = null) {
+            const form = document.getElementById('activity-form');
+            form.style.display = 'block';
+            
+            if (activityId) {
+                document.getElementById('activity-form-title').textContent = 'Editar Actividad';
+                const activity = data.activities.find(a => a.id === activityId);
+                
+                document.getElementById('activity-id').value = activity.id;
+                document.getElementById('activity-name').value = activity.name;
+                document.getElementById('activity-description').value = activity.description || '';
+                document.getElementById('activity-duration').value = activity.duration;
+                document.getElementById('activity-price').value = activity.price;
+                document.getElementById('activity-max-participants').value = activity.maxParticipants;
+            } else {
+                document.getElementById('activity-form-title').textContent = 'Nueva Actividad';
+                document.getElementById('activity-id').value = '';
+                document.getElementById('activity-name').value = '';
+                document.getElementById('activity-description').value = '';
+                document.getElementById('activity-duration').value = 1;
+                document.getElementById('activity-price').value = '';
+                document.getElementById('activity-max-participants').value = 10;
+            }
+        }
+        
+        // Ocultar formulario de actividad
+        function hideActivityForm() {
+            document.getElementById('activity-form').style.display = 'none';
+        }
+        
+        // Guardar actividad
+        function saveActivity() {
+            const id = document.getElementById('activity-id').value;
+            const name = document.getElementById('activity-name').value;
+            const description = document.getElementById('activity-description').value;
+            const duration = parseFloat(document.getElementById('activity-duration').value);
+            const price = parseFloat(document.getElementById('activity-price').value);
+            const maxParticipants = parseInt(document.getElementById('activity-max-participants').value);
+            
+            if (!name || isNaN(duration) || isNaN(price) || isNaN(maxParticipants)) {
+                alert('Por favor complete todos los campos obligatorios');
+                return;
+            }
+            
+            const activityData = {
+                id: id ? parseInt(id) : generateId(data.activities),
+                name,
+                description: description || '',
+                duration,
+                price,
+                maxParticipants
+            };
+            
+            if (id) {
+                // Editar actividad existente
+                const index = data.activities.findIndex(a => a.id === parseInt(id));
+                if (index !== -1) {
+                    data.activities[index] = activityData;
+                }
+            } else {
+                // Añadir nueva actividad
+                data.activities.push(activityData);
+            }
+            
+            saveData();
+            hideActivityForm();
+            renderActivities();
+            initDashboard();
+        }
+        
+        // Renderizar lista de actividades
+        function renderActivities(filter = '') {
+            const activitiesList = document.getElementById('activities-list');
+            activitiesList.innerHTML = '';
+            
+            let filteredActivities = [...data.activities];
+            
+            // Aplicar filtro de búsqueda
+            if (filter) {
+                const lowerFilter = filter.toLowerCase();
+                filteredActivities = filteredActivities.filter(activity => 
+                    activity.name.toLowerCase().includes(lowerFilter) ||
+                    (activity.description && activity.description.toLowerCase().includes(lowerFilter))
+                );
+            }
+            
+            if (filteredActivities.length === 0) {
+                activitiesList.innerHTML = '<tr><td colspan="5" class="empty-state">No se encontraron actividades</td></tr>';
+                return;
+            }
+            
+            filteredActivities.forEach(activity => {
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${activity.name}</td>
+                    <td>${activity.duration} horas</td>
+                    <td>${activity.price.toFixed(2)} €</td>
+                    <td>${activity.maxParticipants}</td>
+                    <td>
+                        <button class="btn btn-primary btn-sm" onclick="showActivityForm(${activity.id})">
+                            <i class="fa fa-edit"></i> Editar
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteActivity(${activity.id})">
+                            <i class="fa fa-trash"></i> Eliminar
+                        </button>
+                    </td>
+                `;
+                
+                activitiesList.appendChild(row);
+            });
+        }
+        
+        // Eliminar actividad
+        function deleteActivity(id) {
+            // Verificar si hay reservas asociadas a esta actividad
+            const hasBookings = data.bookings.some(booking => booking.activityId === id);
+            
+            if (hasBookings) {
+                alert('No se puede eliminar esta actividad porque tiene reservas asociadas.');
+                return;
+            }
+            
+            if (confirm('¿Está seguro de que desea eliminar esta actividad?')) {
+                data.activities = data.activities.filter(activity => activity.id !== id);
+                saveData();
+                renderActivities();
+                initDashboard();
+            }
+        }
+        
+        // Buscar actividades
+        function searchActivities() {
+            const filter = document.getElementById('activity-search').value;
+            renderActivities(filter);
+        }
+        
+        // ==================== SECCIÓN DE CLIENTES ====================
+        
+        // Mostrar formulario de cliente
+        function showClientForm(clientId = null) {
+            const form = document.getElementById('client-form');
+            form.style.display = 'block';
+            
+            if (clientId) {
+                document.getElementById('client-form-title').textContent = 'Editar Cliente';
+                const client = data.clients.find(c => c.id === clientId);
+                
+                document.getElementById('client-id').value = client.id;
+                document.getElementById('client-name').value = client.name;
+                document.getElementById('client-email').value = client.email;
+                document.getElementById('client-phone').value = client.phone;
+                document.getElementById('client-dni').value = client.dni || '';
+                document.getElementById('client-address').value = client.address || '';
+                document.getElementById('client-notes').value = client.notes || '';
+            } else {
+                document.getElementById('client-form-title').textContent = 'Nuevo Cliente';
+                document.getElementById('client-id').value = '';
+                document.getElementById('client-name').value = '';
+                document.getElementById('client-email').value = '';
+                document.getElementById('client-phone').value = '';
+                document.getElementById('client-dni').value = '';
+                document.getElementById('client-address').value = '';
+                document.getElementById('client-notes').value = '';
+            }
+        }
+        
+        // Ocultar formulario de cliente
+        function hideClientForm() {
+            document.getElementById('client-form').style.display = 'none';
+        }
+        
+        // Guardar cliente
+        function saveClient() {
+            const id = document.getElementById('client-id').value;
+            const name = document.getElementById('client-name').value;
+            const email = document.getElementById('client-email').value;
+            const phone = document.getElementById('client-phone').value;
+            const dni = document.getElementById('client-dni').value;
+            const address = document.getElementById('client-address').value;
+            const notes = document.getElementById('client-notes').value;
+            
+            if (!name || !email || !phone) {
+                alert('Por favor complete todos los campos obligatorios');
+                return;
+            }
+            
+            const clientData = {
+                id: id ? parseInt(id) : generateId(data.clients),
+                name,
+                email,
+                phone,
+                dni: dni || '',
+                address: address || '',
+                notes: notes || ''
+            };
+            
+            if (id) {
+                // Editar cliente existente
+                const index = data.clients.findIndex(c => c.id === parseInt(id));
+                if (index !== -1) {
+                    data.clients[index] = clientData;
+                }
+            } else {
+                // Añadir nuevo cliente
+                data.clients.push(clientData);
+            }
+            
+            saveData();
+            hideClientForm();
+            renderClients();
+            initDashboard();
+        }
+        
+        // Renderizar lista de clientes
+        function renderClients(filter = '') {
+            const clientsList = document.getElementById('clients-list');
+            clientsList.innerHTML = '';
+            
+            let filteredClients = [...data.clients];
+            
+            // Aplicar filtro de búsqueda
+            if (filter) {
+                const lowerFilter = filter.toLowerCase();
+                filteredClients = filteredClients.filter(client => 
+                    client.name.toLowerCase().includes(lowerFilter) ||
+                    client.email.toLowerCase().includes(lowerFilter) ||
+                    client.phone.includes(filter) ||
+                    (client.dni && client.dni.toLowerCase().includes(lowerFilter))
+                );
+            }
+            
+            if (filteredClients.length === 0) {
+                clientsList.innerHTML = '<tr><td colspan="5" class="empty-state">No se encontraron clientes</td></tr>';
+                return;
+            }
+            
+            filteredClients.forEach(client => {
+                // Contar reservas del cliente
+                const bookingsCount = data.bookings.filter(booking => booking.clientId === client.id).length;
+                
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${client.name}</td>
+                    <td>${client.email}</td>
+                    <td>${client.phone}</td>
+                    <td>${bookingsCount}</td>
+                    <td>
+                        <button class="btn btn-primary btn-sm" onclick="showClientForm(${client.id})">
+                            <i class="fa fa-edit"></i> Editar
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteClient(${client.id})">
+                            <i class="fa fa-trash"></i> Eliminar
+                        </button>
+                    </td>
+                `;
+                
+                clientsList.appendChild(row);
+            });
+        }
+        
+        // Eliminar cliente
+        function deleteClient(id) {
+            // Verificar si hay reservas asociadas a este cliente
+            const hasBookings = data.bookings.some(booking => booking.clientId === id);
+            
+            if (hasBookings) {
+                alert('No se puede eliminar este cliente porque tiene reservas asociadas.');
+                return;
+            }
+            
+            if (confirm('¿Está seguro de que desea eliminar este cliente?')) {
+                data.clients = data.clients.filter(client => client.id !== id);
+                saveData();
+                renderClients();
+                initDashboard();
+            }
+        }
+        
+        // Buscar clientes
+        function searchClients() {
+            const filter = document.getElementById('client-search').value;
+            renderClients(filter);
+        }
+        
+        // ==================== SECCIÓN DE FACTURACIÓN ====================
+        
+        // Mostrar formulario de factura
+        function showInvoiceForm(invoiceId = null) {
+            const form = document.getElementById('invoice-form');
+            form.style.display = 'block';
+            
+            if (invoiceId) {
+                document.getElementById('invoice-form-title').textContent = 'Editar Factura';
+                const invoice = data.invoices.find(i => i.id === invoiceId);
+                
+                document.getElementById('invoice-id').value = invoice.id;
+                document.getElementById('invoice-client').value = invoice.clientId;
+                document.getElementById('invoice-date').value = invoice.date;
+                document.getElementById('invoice-number').value = invoice.number;
+                document.getElementById('invoice-notes').value = invoice.notes || '';
+                
+                // Limpiar items existentes
+                document.getElementById('invoice-items').innerHTML = '';
+                
+                // Añadir items de la factura
+                invoice.items.forEach(item => {
+                    addInvoiceItem(item.description, item.quantity, item.price);
+                });
+            } else {
+                document.getElementById('invoice-form-title').textContent = 'Nueva Factura';
+                document.getElementById('invoice-id').value = '';
+                document.getElementById('invoice-client').value = '';
+                document.getElementById('invoice-date').value = formatDate(new Date());
+                generateInvoiceNumber();
+                document.getElementById('invoice-notes').value = '';
+                
+                // Limpiar items y añadir uno vacío
+                document.getElementById('invoice-items').innerHTML = '';
+                addInvoiceItem();
+            }
+            
+            calculateInvoiceTotal();
+        }
+        
+        // Ocultar formulario de factura
+        function hideInvoiceForm() {
+            document.getElementById('invoice-form').style.display = 'none';
+        }
+        
+        // Generar número de factura
+        function generateInvoiceNumber() {
+            const prefix = data.settings.invoicePrefix || 'FAC';
+            const sequence = data.settings.invoiceSequence || 1;
+            const year = new Date().getFullYear();
+            const number = `${prefix}-${year}-${sequence.toString().padStart(3, '0')}`;
+            document.getElementById('invoice-number').value = number;
+        }
+        
+        // Añadir línea de factura
+        function addInvoiceItem(description = '', quantity = 1, price = 0) {
+            const itemsContainer = document.getElementById('invoice-items');
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'invoice-item';
+            itemDiv.style.marginBottom = '15px';
+            itemDiv.style.paddingBottom = '15px';
+            itemDiv.style.borderBottom = '1px solid #eee';
+            
+            itemDiv.innerHTML = `
+                <div class="form-group">
+                    <label>Descripción:</label>
+                    <input type="text" class="form-control item-description" value="${description}" required>
+                </div>
+                <div class="form-group">
+                    <label>Cantidad:</label>
+                    <input type="number" class="form-control item-quantity" min="1" value="${quantity}" required onchange="calculateInvoiceTotal()">
+                </div>
+                <div class="form-group">
+                    <label>Precio unitario (€):</label>
+                    <input type="number" class="form-control item-price" min="0" step="0.01" value="${price}" required onchange="calculateInvoiceTotal()">
+                </div>
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeInvoiceItem(this)">
+                    <i class="fa fa-trash"></i> Eliminar
+                </button>
+            `;
+            
+            itemsContainer.appendChild(itemDiv);
+            calculateInvoiceTotal();
+        }
+        
+        // Eliminar línea de factura
+        function removeInvoiceItem(button) {
+            const itemDiv = button.closest('.invoice-item');
+            itemDiv.remove();
+            calculateInvoiceTotal();
+        }
+        
+        // Calcular total de factura
+        function calculateInvoiceTotal() {
+            const items = document.querySelectorAll('.invoice-item');
+            let subtotal = 0;
+            
+            items.forEach(item => {
+                const quantity = parseFloat(item.querySelector('.item-quantity').value) || 0;
+                const price = parseFloat(item.querySelector('.item-price').value) || 0;
+                subtotal += quantity * price;
+            });
+            
+            // Calcular base imponible (precio sin IVA)
+            const ivaPercentage = data.settings.ivaPercentage || 21;
+            const baseImponible = subtotal / (1 + (ivaPercentage / 100));
+            const tax = subtotal - baseImponible;
+            
+            document.getElementById('invoice-subtotal').textContent = baseImponible.toFixed(2) + ' €';
+            document.getElementById('invoice-tax').textContent = tax.toFixed(2) + ' €';
+            document.getElementById('invoice-total').textContent = subtotal.toFixed(2) + ' €';
+        }
+        
+        // Guardar factura
+        function saveInvoice() {
+            const id = document.getElementById('invoice-id').value;
+            const clientId = parseInt(document.getElementById('invoice-client').value);
+            const date = document.getElementById('invoice-date').value;
+            const number = document.getElementById('invoice-number').value;
+            const notes = document.getElementById('invoice-notes').value;
+            
+            // Recoger items de la factura
+            const items = [];
+            document.querySelectorAll('.invoice-item').forEach(item => {
+                const description = item.querySelector('.item-description').value;
+                const quantity = parseFloat(item.querySelector('.item-quantity').value);
+                const price = parseFloat(item.querySelector('.item-price').value);
+                
+                if (description && !isNaN(quantity) && !isNaN(price)) {
+                    items.push({ description, quantity, price });
+                }
+            });
+            
+            if (!clientId || !date || !number || items.length === 0) {
+                alert('Por favor complete todos los campos obligatorios y añada al menos un item');
+                return;
+            }
+            
+            const invoiceData = {
+                id: id ? parseInt(id) : generateId(data.invoices),
+                clientId,
+                date,
+                number,
+                items,
+                notes: notes || '',
+                status: 'pending' // Por defecto pendiente de pago
+            };
+            
+            if (id) {
+                // Editar factura existente
+                const index = data.invoices.findIndex(i => i.id === parseInt(id));
+                if (index !== -1) {
+                    invoiceData.status = data.invoices[index].status; // Mantener el estado existente
+                    data.invoices[index] = invoiceData;
+                }
+            } else {
+                // Añadir nueva factura
+                data.invoices.push(invoiceData);
+                // Incrementar secuencia de facturación
+                data.settings.invoiceSequence = (data.settings.invoiceSequence || 1) + 1;
+            }
+            
+            saveData();
+            hideInvoiceForm();
+            renderInvoices();
+            initDashboard();
+        }
+        
+        // Renderizar lista de facturas
+        function renderInvoices(filter = '', statusFilter = 'all') {
+            const invoicesList = document.getElementById('invoices-list');
+            invoicesList.innerHTML = '';
+            
+            let filteredInvoices = [...data.invoices];
+            
+            // Aplicar filtro de búsqueda
+            if (filter) {
+                const lowerFilter = filter.toLowerCase();
+                filteredInvoices = filteredInvoices.filter(invoice => {
+                    const client = data.clients.find(c => c.id === invoice.clientId);
+                    return (
+                        invoice.number.toLowerCase().includes(lowerFilter) ||
+                        invoice.date.includes(filter) ||
+                        (client && client.name.toLowerCase().includes(lowerFilter))
+                    );
+                });
+            }
+            
+            // Aplicar filtro de estado
+            if (statusFilter !== 'all') {
+                filteredInvoices = filteredInvoices.filter(invoice => invoice.status === statusFilter);
+            }
+            
+            // Ordenar por fecha más reciente primero
+            filteredInvoices.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            if (filteredInvoices.length === 0) {
+                invoicesList.innerHTML = '<tr><td colspan="6" class="empty-state">No se encontraron facturas</td></tr>';
+                return;
+            }
+            
+            filteredInvoices.forEach(invoice => {
+                const client = data.clients.find(c => c.id === invoice.clientId);
+                
+                // Calcular total
+                const subtotal = invoice.items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+                const ivaPercentage = data.settings.ivaPercentage || 21;
+                const tax = subtotal * (ivaPercentage / 100);
+                const total = subtotal + tax;
+                
+                let statusBadge = '';
+                if (invoice.status === 'paid') {
+                    statusBadge = '<span class="badge badge-success">Pagada</span>';
+                } else {
+                    statusBadge = '<span class="badge badge-warning">Pendiente</span>';
+                }
+                
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${invoice.number}</td>
+                    <td>${client ? client.name : 'Cliente no encontrado'}</td>
+                    <td>${formatDate(invoice.date)}</td>
+                    <td>${total.toFixed(2)} €</td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        <button class="btn btn-primary btn-sm" onclick="showInvoiceForm(${invoice.id})">
+                            <i class="fa fa-edit"></i> Editar
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteInvoice(${invoice.id})">
+                            <i class="fa fa-trash"></i> Eliminar
+                        </button>
+                        ${invoice.status === 'pending' ? `
+                        <button class="btn btn-success btn-sm" onclick="markInvoiceAsPaid(${invoice.id})">
+                            <i class="fa fa-check"></i> Pagar
+                        </button>
+                        ` : ''}
+                    </td>
+                `;
+                
+                invoicesList.appendChild(row);
+            });
+        }
+        
+        // Eliminar factura
+        function deleteInvoice(id) {
+            if (confirm('¿Está seguro de que desea eliminar esta factura?')) {
+                data.invoices = data.invoices.filter(invoice => invoice.id !== id);
+                saveData();
+                renderInvoices();
+                initDashboard();
+            }
+        }
+        
+        // Marcar factura como pagada
+        function markInvoiceAsPaid(id) {
+            const invoice = data.invoices.find(i => i.id === id);
+            if (invoice) {
+                invoice.status = 'paid';
+                saveData();
+                renderInvoices();
+                initDashboard();
+            }
+        }
+        
+        // Buscar facturas
+        function searchInvoices() {
+            const filter = document.getElementById('invoice-search').value;
+            renderInvoices(filter, document.getElementById('invoice-filter-status').value);
+        }
+        
+        // Filtrar facturas por estado
+        function filterInvoices() {
+            const statusFilter = document.getElementById('invoice-filter-status').value;
+            const filter = document.getElementById('invoice-search').value;
+            renderInvoices(filter, statusFilter);
+        }
+        
+        // ==================== SECCIÓN DE GASTOS ====================
+        
+        // Mostrar formulario de gasto
+        function showExpenseForm(expenseId = null) {
+            const form = document.getElementById('expense-form');
+            form.style.display = 'block';
+            
+            if (expenseId) {
+                document.getElementById('expense-form-title').textContent = 'Editar Gasto';
+                const expense = data.expenses.find(e => e.id === expenseId);
+                
+                document.getElementById('expense-id').value = expense.id;
+                document.getElementById('expense-description').value = expense.description;
+                document.getElementById('expense-amount').value = expense.amount;
+                document.getElementById('expense-date').value = expense.date;
+                document.getElementById('expense-category').value = expense.category;
+                document.getElementById('expense-notes').value = expense.notes || '';
+            } else {
+                document.getElementById('expense-form-title').textContent = 'Nuevo Gasto';
+                document.getElementById('expense-id').value = '';
+                document.getElementById('expense-description').value = '';
+                document.getElementById('expense-amount').value = '';
+                document.getElementById('expense-date').value = formatDate(new Date());
+                document.getElementById('expense-category').value = 'supplies';
+                document.getElementById('expense-notes').value = '';
+            }
+        }
+        
+        // Ocultar formulario de gasto
+        function hideExpenseForm() {
+            document.getElementById('expense-form').style.display = 'none';
+        }
+        
+        // Guardar gasto
+        function saveExpense() {
+            const id = document.getElementById('expense-id').value;
+            const description = document.getElementById('expense-description').value;
+            const amount = parseFloat(document.getElementById('expense-amount').value);
+            const date = document.getElementById('expense-date').value;
+            const category = document.getElementById('expense-category').value;
+            const notes = document.getElementById('expense-notes').value;
+            
+            if (!description || isNaN(amount) || !date || !category) {
+                alert('Por favor complete todos los campos obligatorios');
+                return;
+            }
+            
+            const expenseData = {
+                id: id ? parseInt(id) : generateId(data.expenses),
+                description,
+                amount,
+                date,
+                category,
+                notes: notes || ''
+            };
+            
+            if (id) {
+                // Editar gasto existente
+                const index = data.expenses.findIndex(e => e.id === parseInt(id));
+                if (index !== -1) {
+                    data.expenses[index] = expenseData;
+                }
+            } else {
+                // Añadir nuevo gasto
+                data.expenses.push(expenseData);
+            }
+            
+            saveData();
+            hideExpenseForm();
+            renderExpenses();
+            initDashboard();
+        }
+        
+        // Renderizar lista de gastos
+        function renderExpenses(filter = '') {
+            const expensesList = document.getElementById('expenses-list');
+            expensesList.innerHTML = '';
+            
+            let filteredExpenses = [...data.expenses];
+            
+            // Aplicar filtro de búsqueda
+            if (filter) {
+                const lowerFilter = filter.toLowerCase();
+                filteredExpenses = filteredExpenses.filter(expense => 
+                    expense.description.toLowerCase().includes(lowerFilter) ||
+                    expense.date.includes(filter) ||
+                    expense.category.toLowerCase().includes(lowerFilter)
+                );
+            }
+            
+            // Ordenar por fecha más reciente primero
+            filteredExpenses.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            if (filteredExpenses.length === 0) {
+                expensesList.innerHTML = '<tr><td colspan="6" class="empty-state">No se encontraron gastos</td></tr>';
+                return;
+            }
+            
+            filteredExpenses.forEach(expense => {
+                const row = document.createElement('tr');
+                
+                let categoryText = '';
+                switch(expense.category) {
+                    case 'supplies':
+                        categoryText = 'Suministros';
+                        break;
+                    case 'equipment':
+                        categoryText = 'Equipamiento';
+                        break;
+                    case 'salaries':
+                        categoryText = 'Salarios';
+                        break;
+                    case 'maintenance':
+                        categoryText = 'Mantenimiento';
+                        break;
+                    case 'other':
+                        categoryText = 'Otros';
+                        break;
+                }
+                
+                row.innerHTML = `
+                    <td>${formatDate(expense.date)}</td>
+                    <td>${expense.description}</td>
+                    <td>${categoryText}</td>
+                    <td>${expense.amount.toFixed(2)} €</td>
+                    <td>${expense.notes || '-'}</td>
+                    <td>
+                        <button class="btn btn-primary btn-sm" onclick="showExpenseForm(${expense.id})">
+                            <i class="fa fa-edit"></i> Editar
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteExpense(${expense.id})">
+                            <i class="fa fa-trash"></i> Eliminar
+                        </button>
+                    </td>
+                `;
+                
+                expensesList.appendChild(row);
+            });
+        }
+        
+        // Eliminar gasto
+        function deleteExpense(id) {
+            if (confirm('¿Está seguro de que desea eliminar este gasto?')) {
+                data.expenses = data.expenses.filter(expense => expense.id !== id);
+                saveData();
+                renderExpenses();
+                initDashboard();
+            }
+        }
+        
+        // Buscar gastos
+        function searchExpenses() {
+            const filter = document.getElementById('expense-search').value;
+            renderExpenses(filter);
+        }
+        
+        // ==================== SECCIÓN DE MONITORES ====================
+        
+        // Mostrar formulario de monitor
+        function showMonitorForm(monitorId = null) {
+            const form = document.getElementById('monitor-form');
+            form.style.display = 'block';
+            
+            if (monitorId) {
+                document.getElementById('monitor-form-title').textContent = 'Editar Monitor';
+                const monitor = data.monitors.find(m => m.id === monitorId);
+                
+                document.getElementById('monitor-id').value = monitor.id;
+                document.getElementById('monitor-name').value = monitor.name;
+                document.getElementById('monitor-email').value = monitor.email;
+                document.getElementById('monitor-phone').value = monitor.phone;
+                document.getElementById('monitor-specialty').value = monitor.specialty;
+                document.getElementById('monitor-active').checked = monitor.active;
+            } else {
+                document.getElementById('monitor-form-title').textContent = 'Nuevo Monitor';
+                document.getElementById('monitor-id').value = '';
+                document.getElementById('monitor-name').value = '';
+                document.getElementById('monitor-email').value = '';
+                document.getElementById('monitor-phone').value = '';
+                document.getElementById('monitor-specialty').value = '';
+                document.getElementById('monitor-active').checked = true;
+            }
+        }
+        
+        // Ocultar formulario de monitor
+        function hideMonitorForm() {
+            document.getElementById('monitor-form').style.display = 'none';
+        }
+        
+        // Guardar monitor
+        function saveMonitor() {
+            const id = document.getElementById('monitor-id').value;
+            const name = document.getElementById('monitor-name').value;
+            const email = document.getElementById('monitor-email').value;
+            const phone = document.getElementById('monitor-phone').value;
+            const specialty = document.getElementById('monitor-specialty').value;
+            const active = document.getElementById('monitor-active').checked;
+            
+            if (!name || !email || !phone || !specialty) {
+                alert('Por favor complete todos los campos obligatorios');
+                return;
+            }
+            
+            const monitorData = {
+                id: id ? parseInt(id) : generateId(data.monitors),
+                name,
+                email,
+                phone,
+                specialty,
+                active
+            };
+            
+            if (id) {
+                // Editar monitor existente
+                const index = data.monitors.findIndex(m => m.id === parseInt(id));
+                if (index !== -1) {
+                    data.monitors[index] = monitorData;
+                }
+            } else {
+                // Añadir nuevo monitor
+                data.monitors.push(monitorData);
+            }
+            
+            saveData();
+            hideMonitorForm();
+            renderMonitors();
+            initDashboard();
+        }
+        
+        // Renderizar lista de monitores
+        function renderMonitors(filter = '') {
+            const monitorsList = document.getElementById('monitors-list');
+            monitorsList.innerHTML = '';
+            
+            let filteredMonitors = [...data.monitors];
+            
+            // Aplicar filtro de búsqueda
+            if (filter) {
+                const lowerFilter = filter.toLowerCase();
+                filteredMonitors = filteredMonitors.filter(monitor => 
+                    monitor.name.toLowerCase().includes(lowerFilter) ||
+                    monitor.email.toLowerCase().includes(lowerFilter) ||
+                    monitor.phone.includes(filter) ||
+                    monitor.specialty.toLowerCase().includes(lowerFilter)
+                );
+            }
+            
+            if (filteredMonitors.length === 0) {
+                monitorsList.innerHTML = '<tr><td colspan="7" class="empty-state">No se encontraron monitores</td></tr>';
+                return;
+            }
+            
+            filteredMonitors.forEach(monitor => {
+                // Contar reservas del monitor
+                const bookingsCount = data.bookings.filter(booking => booking.monitorId === monitor.id).length;
+                
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${monitor.name}</td>
+                    <td>${monitor.email}</td>
+                    <td>${monitor.phone}</td>
+                    <td>${monitor.specialty}</td>
+                    <td>${bookingsCount}</td>
+                    <td>
+                        <span class="badge ${monitor.active ? 'badge-success' : 'badge-warning'}">
+                            ${monitor.active ? 'Activo' : 'Inactivo'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-primary btn-sm" onclick="showMonitorForm(${monitor.id})">
+                            <i class="fa fa-edit"></i> Editar
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteMonitor(${monitor.id})">
+                            <i class="fa fa-trash"></i> Eliminar
+                        </button>
+                    </td>
+                `;
+                
+                monitorsList.appendChild(row);
+            });
+        }
+        
+        // Eliminar monitor
+        function deleteMonitor(id) {
+            // Verificar si hay reservas asociadas a este monitor
+            const hasBookings = data.bookings.some(booking => booking.monitorId === id);
+            
+            if (hasBookings) {
+                alert('No se puede eliminar este monitor porque tiene reservas asociadas.');
+                return;
+            }
+            
+            if (confirm('¿Está seguro de que desea eliminar este monitor?')) {
+                data.monitors = data.monitors.filter(monitor => monitor.id !== id);
+                saveData();
+                renderMonitors();
+                initDashboard();
+            }
+        }
+        
+        // Buscar monitores
+        function searchMonitors() {
+            const filter = document.getElementById('monitor-search').value;
+            renderMonitors(filter);
+        }
+        
+        // ==================== SECCIÓN DE NÓMINAS ====================
+        
+        // Mostrar formulario de nómina
+        function showPayrollForm(payrollId = null) {
+            const form = document.getElementById('payroll-form');
+            form.style.display = 'block';
+            
+            if (payrollId) {
+                document.getElementById('payroll-form-title').textContent = 'Editar Nómina';
+                const payroll = data.payrolls.find(p => p.id === payrollId);
+                
+                document.getElementById('payroll-id').value = payroll.id;
+                document.getElementById('payroll-monitor').value = payroll.monitorId;
+                document.getElementById('payroll-month').value = payroll.month;
+                document.getElementById('payroll-year').value = payroll.year;
+                document.getElementById('payroll-hours').value = payroll.hours;
+                document.getElementById('payroll-hourly-rate').value = payroll.hourlyRate;
+                document.getElementById('payroll-bonus').value = payroll.bonus || 0;
+                document.getElementById('payroll-deductions').value = payroll.deductions || 0;
+                document.getElementById('payroll-notes').value = payroll.notes || '';
+            } else {
+                document.getElementById('payroll-form-title').textContent = 'Nueva Nómina';
+                document.getElementById('payroll-id').value = '';
+                document.getElementById('payroll-monitor').value = '';
+                document.getElementById('payroll-month').value = (new Date().getMonth() + 1).toString();
+                document.getElementById('payroll-year').value = new Date().getFullYear().toString();
+                document.getElementById('payroll-hours').value = '';
+                document.getElementById('payroll-hourly-rate').value = '';
+                document.getElementById('payroll-bonus').value = '0';
+                document.getElementById('payroll-deductions').value = '0';
+                document.getElementById('payroll-notes').value = '';
+            }
+            
+            calculatePayrollTotal();
+        }
+        
+        // Ocultar formulario de nómina
+        function hidePayrollForm() {
+            document.getElementById('payroll-form').style.display = 'none';
+        }
+        
+        // Calcular total de nómina
+        function calculatePayrollTotal() {
+            const hours = parseFloat(document.getElementById('payroll-hours').value) || 0;
+            const hourlyRate = parseFloat(document.getElementById('payroll-hourly-rate').value) || 0;
+            const bonus = parseFloat(document.getElementById('payroll-bonus').value) || 0;
+            const deductions = parseFloat(document.getElementById('payroll-deductions').value) || 0;
+            
+            const baseSalary = hours * hourlyRate;
+            const total = baseSalary + bonus - deductions;
+            
+            document.getElementById('payroll-base-salary').textContent = baseSalary.toFixed(2) + ' €';
+            document.getElementById('payroll-total').textContent = total.toFixed(2) + ' €';
+        }
+        
+        // Guardar nómina
+        function savePayroll() {
+            const id = document.getElementById('payroll-id').value;
+            const monitorId = parseInt(document.getElementById('payroll-monitor').value);
+            const month = parseInt(document.getElementById('payroll-month').value);
+            const year = parseInt(document.getElementById('payroll-year').value);
+            const hours = parseFloat(document.getElementById('payroll-hours').value);
+            const hourlyRate = parseFloat(document.getElementById('payroll-hourly-rate').value);
+            const bonus = parseFloat(document.getElementById('payroll-bonus').value) || 0;
+            const deductions = parseFloat(document.getElementById('payroll-deductions').value) || 0;
+            const notes = document.getElementById('payroll-notes').value;
+            
+            if (!monitorId || isNaN(month) || isNaN(year) || isNaN(hours) || isNaN(hourlyRate)) {
+                alert('Por favor complete todos los campos obligatorios');
+                return;
+            }
+            
+            const payrollData = {
+                id: id ? parseInt(id) : generateId(data.payrolls),
+                monitorId,
+                month,
+                year,
+                hours,
+                hourlyRate,
+                bonus,
+                deductions,
+                notes: notes || '',
+                paid: false
+            };
+            
+            if (id) {
+                // Editar nómina existente
+                const index = data.payrolls.findIndex(p => p.id === parseInt(id));
+                if (index !== -1) {
+                    payrollData.paid = data.payrolls[index].paid; // Mantener el estado de pago
+                    data.payrolls[index] = payrollData;
+                }
+            } else {
+                // Añadir nueva nómina
+                data.payrolls.push(payrollData);
+            }
+            
+            saveData();
+            hidePayrollForm();
+            renderPayrolls();
+            initDashboard();
+        }
+        
+        // Renderizar lista de nóminas
+        function renderPayrolls(filter = '') {
+            const payrollsList = document.getElementById('payrolls-list');
+            payrollsList.innerHTML = '';
+            
+            let filteredPayrolls = [...data.payrolls];
+            
+            // Aplicar filtro de búsqueda
+            if (filter) {
+                const lowerFilter = filter.toLowerCase();
+                filteredPayrolls = filteredPayrolls.filter(payroll => {
+                    const monitor = data.monitors.find(m => m.id === payroll.monitorId);
+                    return (
+                        (monitor && monitor.name.toLowerCase().includes(lowerFilter)) ||
+                        `${payroll.month}/${payroll.year}`.includes(filter)
+                    );
+                });
+            }
+            
+            // Ordenar por año y mes descendente
+            filteredPayrolls.sort((a, b) => {
+                if (a.year !== b.year) return b.year - a.year;
+                return b.month - a.month;
+            });
+            
+            if (filteredPayrolls.length === 0) {
+                payrollsList.innerHTML = '<tr><td colspan="8" class="empty-state">No se encontraron nóminas</td></tr>';
+                return;
+            }
+            
+            filteredPayrolls.forEach(payroll => {
+                const monitor = data.monitors.find(m => m.id === payroll.monitorId);
+                const baseSalary = payroll.hours * payroll.hourlyRate;
+                const total = baseSalary + payroll.bonus - payroll.deductions;
+                
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${monitor ? monitor.name : 'Monitor no encontrado'}</td>
+                    <td>${payroll.month}/${payroll.year}</td>
+                    <td>${payroll.hours} h</td>
+                    <td>${payroll.hourlyRate.toFixed(2)} €/h</td>
+                    <td>${baseSalary.toFixed(2)} €</td>
+                    <td>${total.toFixed(2)} €</td>
+                    <td>
+                        <span class="badge ${payroll.paid ? 'badge-success' : 'badge-warning'}">
+                            ${payroll.paid ? 'Pagada' : 'Pendiente'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-primary btn-sm" onclick="showPayrollForm(${payroll.id})">
+                            <i class="fa fa-edit"></i> Editar
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="deletePayroll(${payroll.id})">
+                            <i class="fa fa-trash"></i> Eliminar
+                        </button>
+                        ${!payroll.paid ? `
+                        <button class="btn btn-success btn-sm" onclick="markPayrollAsPaid(${payroll.id})">
+                            <i class="fa fa-check"></i> Pagar
+                        </button>
+                        ` : ''}
+                    </td>
+                `;
+                
+                payrollsList.appendChild(row);
+            });
+        }
+        
+        // Eliminar nómina
+        function deletePayroll(id) {
+            if (confirm('¿Está seguro de que desea eliminar esta nómina?')) {
+                data.payrolls = data.payrolls.filter(payroll => payroll.id !== id);
+                saveData();
+                renderPayrolls();
+                initDashboard();
+            }
+        }
+        
+        // Marcar nómina como pagada
+        function markPayrollAsPaid(id) {
+            const payroll = data.payrolls.find(p => p.id === id);
+            if (payroll) {
+                payroll.paid = true;
+                saveData();
+                renderPayrolls();
+                initDashboard();
+            }
+        }
+        
+        // Buscar nóminas
+        function searchPayrolls() {
+            const filter = document.getElementById('payroll-search').value;
+            renderPayrolls(filter);
+        }
+        
+        // ==================== SECCIÓN DE INFORMES ====================
+        
+        // Generar informe financiero
+        function generateFinancialReport() {
+            const year = parseInt(document.getElementById('report-year').value) || new Date().getFullYear();
+            const type = document.getElementById('report-type').value;
+            
+            let reportData = [];
+            let title = '';
+            
+            if (type === 'monthly-income') {
+                title = `Ingresos Mensuales - ${year}`;
+                reportData = generateMonthlyIncomeReport(year);
+            } else if (type === 'monthly-expenses') {
+                title = `Gastos Mensuales - ${year}`;
+                reportData = generateMonthlyExpensesReport(year);
+            } else if (type === 'activity-popularity') {
+                title = `Popularidad de Actividades - ${year}`;
+                reportData = generateActivityPopularityReport(year);
+            }
+            
+            renderReport(title, reportData);
+        }
+        
+        // Generar informe de ingresos mensuales
+        function generateMonthlyIncomeReport(year) {
+            const reportData = Array(12).fill(0).map((_, i) => {
+                return {
+                    month: i + 1,
+                    income: 0
+                };
+            });
+            
+            data.invoices
+                .filter(invoice => {
+                    const invoiceYear = new Date(invoice.date).getFullYear();
+                    return invoiceYear === year && invoice.status === 'paid';
+                })
+                .forEach(invoice => {
+                    const month = new Date(invoice.date).getMonth();
+                    const subtotal = invoice.items.reduce((itemSum, item) => itemSum + (item.quantity * item.price), 0);
+                    const ivaPercentage = data.settings.ivaPercentage || 21;
+                    const tax = subtotal * (ivaPercentage / 100);
+                    const total = subtotal + tax;
+                    
+                    reportData[month].income += total;
+                });
+            
+            return reportData.map(item => {
+                return {
+                    Mes: getMonthName(item.month),
+                    Ingresos: item.income.toFixed(2) + ' €'
+                };
+            });
+        }
+        
+        // Generar informe de gastos mensuales
+        function generateMonthlyExpensesReport(year) {
+            const reportData = Array(12).fill(0).map((_, i) => {
+                return {
+                    month: i + 1,
+                    expenses: 0
+                };
+            });
+            
+            data.expenses
+                .filter(expense => {
+                    const expenseYear = new Date(expense.date).getFullYear();
+                    return expenseYear === year;
+                })
+                .forEach(expense => {
+                    const month = new Date(expense.date).getMonth();
+                    reportData[month].expenses += expense.amount;
+                });
+            
+            // Agregar nóminas a los gastos
+            data.payrolls
+                .filter(payroll => payroll.year === year && payroll.paid)
+                .forEach(payroll => {
+                    const baseSalary = payroll.hours * payroll.hourlyRate;
+                    const total = baseSalary + payroll.bonus - payroll.deductions;
+                    reportData[payroll.month - 1].expenses += total;
+                });
+            
+            return reportData.map(item => {
+                return {
+                    Mes: getMonthName(item.month),
+                    Gastos: item.expenses.toFixed(2) + ' €'
+                };
+            });
+        }
+        
+        // Generar informe de popularidad de actividades
+        function generateActivityPopularityReport(year) {
+            const reportData = data.activities.map(activity => {
+                return {
+                    activityId: activity.id,
+                    activityName: activity.name,
+                    bookings: 0,
+                    income: 0
+                };
+            });
+            
+            data.bookings
+                .filter(booking => {
+                    const bookingYear = new Date(booking.date).getFullYear();
+                    return bookingYear === year && booking.status !== 'cancelled';
+                })
+                .forEach(booking => {
+                    const activityIndex = reportData.findIndex(a => a.activityId === booking.activityId);
+                    if (activityIndex !== -1) {
+                        reportData[activityIndex].bookings++;
+                        
+                        // Calcular ingresos de esta reserva (simplificado)
+                        const activity = data.activities.find(a => a.id === booking.activityId);
+                        if (activity) {
+                            reportData[activityIndex].income += activity.price;
+                        }
+                    }
+                });
+            
+            return reportData.map(item => {
+                return {
+                    Actividad: item.activityName,
+                    Reservas: item.bookings,
+                    Ingresos: item.income.toFixed(2) + ' €'
+                };
+            });
+        }
+        
+        // Renderizar informe
+        function renderReport(title, data) {
+            const reportContainer = document.getElementById('report-results');
+            reportContainer.innerHTML = '';
+            
+            if (data.length === 0) {
+                reportContainer.innerHTML = '<div class="empty-state">No hay datos para mostrar en este informe</div>';
+                return;
+            }
+            
+            const titleElement = document.createElement('h3');
+            titleElement.textContent = title;
+            reportContainer.appendChild(titleElement);
+            
+            const table = document.createElement('table');
+            table.className = 'data-table';
+            
+            // Crear encabezados
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            
+            Object.keys(data[0]).forEach(key => {
+                const th = document.createElement('th');
+                th.textContent = key;
+                headerRow.appendChild(th);
+            });
+            
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+            
+            // Crear cuerpo
+            const tbody = document.createElement('tbody');
+            
+            data.forEach(item => {
+                const row = document.createElement('tr');
+                
+                Object.values(item).forEach(value => {
+                    const td = document.createElement('td');
+                    td.textContent = value;
+                    row.appendChild(td);
+                });
+                
+                tbody.appendChild(row);
+            });
+            
+            table.appendChild(tbody);
+            reportContainer.appendChild(table);
+        }
+        
+        // Obtener nombre del mes
+        function getMonthName(month) {
+            const months = [
+                'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+            ];
+            return months[month - 1];
+        }
+        
+        // ==================== SECCIÓN DE CONFIGURACIÓN ====================
+        
+        // Cargar configuración
+        function loadSettings() {
+            document.getElementById('setting-invoice-prefix').value = data.settings.invoicePrefix || 'FAC';
+            document.getElementById('setting-invoice-sequence').value = data.settings.invoiceSequence || 1;
+            document.getElementById('setting-iva-percentage').value = data.settings.ivaPercentage || 21;
+            document.getElementById('setting-company-name').value = data.settings.companyName || '';
+            document.getElementById('setting-company-address').value = data.settings.companyAddress || '';
+            document.getElementById('setting-company-phone').value = data.settings.companyPhone || '';
+            document.getElementById('setting-company-email').value = data.settings.companyEmail || '';
+        }
+        
+        // Guardar configuración
+        function saveSettings() {
+            data.settings = {
+                invoicePrefix: document.getElementById('setting-invoice-prefix').value,
+                invoiceSequence: parseInt(document.getElementById('setting-invoice-sequence').value) || 1,
+                ivaPercentage: parseFloat(document.getElementById('setting-iva-percentage').value) || 21,
+                companyName: document.getElementById('setting-company-name').value,
+                companyAddress: document.getElementById('setting-company-address').value,
+                companyPhone: document.getElementById('setting-company-phone').value,
+                companyEmail: document.getElementById('setting-company-email').value
+            };
+            
+            saveData();
+            alert('Configuración guardada correctamente');
+        }
+        
+        // ==================== SECCIÓN DE CALENDARIO ====================
+        
+        // Renderizar calendario
+        function renderCalendar() {
+            const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            document.getElementById('current-month').textContent = `${monthNames[currentMonth]} ${currentYear}`;
+            
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            
+            let startingDay = firstDay.getDay();
+            if (startingDay === 0) startingDay = 7; // Domingo como día 7
+            
+            const calendarBody = document.getElementById('calendar-body');
+            calendarBody.innerHTML = '';
+            
+            let date = 1;
+            let today = new Date();
+            let isCurrentMonth = today.getFullYear() === currentYear && today.getMonth() === currentMonth;
+            
+            for (let i = 0; i < 6; i++) {
+                if (date > lastDay.getDate()) break;
+                
+                const row = document.createElement('tr');
+                
+                for (let j = 1; j <= 7; j++) {
+                    const cell = document.createElement('td');
+                    
+                    if (i === 0 && j < startingDay) {
+                        // Celda vacía antes del primer día del mes
+                        cell.textContent = '';
+                    } else if (date > lastDay.getDate()) {
+                        // Celda vacía después del último día del mes
+                        cell.textContent = '';
+                    } else {
+                        // Celda con fecha
+                        cell.textContent = date;
+                        
+                        // Marcar día actual
+                        if (isCurrentMonth && date === today.getDate()) {
+                            cell.classList.add('today');
+                        }
+                        
+                        // Marcar días con reservas
+                        const dateStr = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}-${date.toString().padStart(2, '0')}`;
+                        const hasBooking = data.bookings.some(booking => booking.date === dateStr && booking.status !== 'cancelled');
+                        
+                        if (hasBooking) {
+                            cell.classList.add('has-booking');
+                            cell.onclick = function() { showDayDetails(dateStr); };
+                            cell.style.cursor = 'pointer';
+                        }
+                        
+                        date++;
+                    }
+                    
+                    row.appendChild(cell);
+                }
+                
+                calendarBody.appendChild(row);
+            }
+            
+            // Limpiar detalles del día
+            document.getElementById('day-details').style.display = 'none';
+        }
+        
+        // Cambiar mes en el calendario
+        function changeMonth(offset) {
+            currentMonth += offset;
+            
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            } else if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            
+            renderCalendar();
+        }
+        
+        // Resetear al mes actual
+        function resetToToday() {
+            const today = new Date();
+            currentMonth = today.getMonth();
+            currentYear = today.getFullYear();
+            renderCalendar();
+        }
+        
+        // Mostrar detalles del día
+        function showDayDetails(dateStr) {
+            const date = new Date(dateStr);
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('selected-date').textContent = date.toLocaleDateString('es-ES', options);
+            
+            const dayBookings = document.getElementById('day-bookings');
+            dayBookings.innerHTML = '';
+            
+            const bookings = data.bookings
+                .filter(booking => booking.date === dateStr && booking.status !== 'cancelled')
+                .sort((a, b) => a.time.localeCompare(b.time));
+            
+            if (bookings.length === 0) {
+                dayBookings.innerHTML = '<div class="empty-state">No hay reservas para este día</div>';
+            } else {
+                bookings.forEach(booking => {
+                    const client = data.clients.find(c => c.id === booking.clientId);
+                    const activity = data.activities.find(a => a.id === booking.activityId);
+                    const monitor = data.monitors.find(m => m.id === booking.monitorId);
+                    
+                    const bookingDiv = document.createElement('div');
+                    bookingDiv.style.padding = '10px';
+                    bookingDiv.style.marginBottom = '10px';
+                    bookingDiv.style.borderBottom = '1px solid #eee';
+                    
+                    let statusClass = '';
+                    let statusText = '';
+                    switch(booking.status) {
+                        case 'confirmed':
+                            statusClass = 'status-confirmed';
+                            statusText = 'Confirmada';
+                            break;
+                        case 'pending':
+                            statusClass = 'status-pending';
+                            statusText = 'Pendiente';
+                            break;
+                    }
+                    
+                    bookingDiv.innerHTML = `
+                        <div style="font-weight: bold;">${activity ? activity.name : 'Actividad no encontrada'}</div>
+                        <div>Hora: ${booking.time}</div>
+                        <div>Cliente: ${client ? client.name : 'Cliente no encontrado'}</div>
+                        <div>Monitor: ${monitor ? monitor.name : 'Monitor no encontrado'}</div>
+                        <div><span class="${statusClass}">${statusText}</span></div>
+                        ${booking.notes ? `<div>Notas: ${booking.notes}</div>` : ''}
+                    `;
+                    
+                    dayBookings.appendChild(bookingDiv);
+                });
+            }
+            
+            document.getElementById('day-details').style.display = 'block';
+        }
+        
+        // ==================== FUNCIONES PARA SELECTS ====================
+        
+        // Cargar select de clientes
+        function loadClientSelect(selectId) {
+            const select = document.getElementById(selectId);
+            select.innerHTML = '<option value="">Seleccione un cliente</option>';
+            
+            data.clients.forEach(client => {
+                const option = document.createElement('option');
+                option.value = client.id;
+                option.textContent = `${client.name} - ${client.address || 'Sin dirección'}`;
+                option.setAttribute('data-address', client.address || '');
+                select.appendChild(option);
+            });
+        }
+        
+        // Cargar select de actividades
+        function loadActivitySelect(selectId) {
+            const select = document.getElementById(selectId);
+            select.innerHTML = '<option value="">Seleccione una actividad</option>';
+            
+            data.activities.forEach(activity => {
+                const option = document.createElement('option');
+                option.value = activity.id;
+                option.textContent = activity.name;
+                select.appendChild(option);
+            });
+        }
+        
+        // Cargar select de monitores
+        function loadMonitorSelect(selectId) {
+            const select = document.getElementById(selectId);
+            select.innerHTML = '<option value="">Seleccione un monitor</option>';
+            
+            data.monitors.filter(m => m.active).forEach(monitor => {
+                const option = document.createElement('option');
+                option.value = monitor.id;
+                option.textContent = monitor.name;
+                select.appendChild(option);
+            });
+        }
+
+        // Add print invoice functionality
+        function printInvoice() {
+            const clientId = document.getElementById('invoice-client').value;
+            const client = data.clients.find(c => c.id === parseInt(clientId));
+            const invoiceNumber = document.getElementById('invoice-number').value;
+            const invoiceDate = document.getElementById('invoice-date').value;
+            
+            // Crear contenido imprimible
+            const printContent = `
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; }
+                    .header { text-align: center; margin-bottom: 20px; }
+                    .company-info { margin-bottom: 30px; }
+                    .client-info { margin-bottom: 20px; }
+                    .invoice-details { margin-bottom: 20px; }
+                    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                    .totals { margin-left: auto; width: 300px; }
+                    .footer { margin-top: 50px; font-size: 12px; text-align: center; }
+                </style>
+                <div class="header">
+                    <h2>LOREDO SURF SCHOOL</h2>
+                    <p>B39814140 | C/ El Juncal 2, Loredo, Cantabria</p>
+                </div>
+                
+                <div class="invoice-details">
+                    <p><strong>Factura:</strong> ${invoiceNumber}</p>
+                    <p><strong>Fecha:</strong> ${formatDate(invoiceDate)}</p>
+                </div>
+                
+                <div class="client-info">
+                    <h3>Datos del Cliente:</h3>
+                    <p><strong>Nombre:</strong> ${client ? client.name : 'No especificado'}</p>
+                    <p><strong>Dirección:</strong> ${client ? client.address : 'No especificada'}</p>
+                </div>
+                
+                <h3>Detalle de la Factura:</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Descripción</th>
+                            <th>Cantidad</th>
+                            <th>Precio Unitario (€)</th>
+                            <th>Total (€)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${generateInvoiceItemsForPrint()}
+                    </tbody>
+                </table>
+                
+                <div class="totals">
+                    <p><strong>Base Imponible:</strong> ${document.getElementById('invoice-subtotal').textContent}</p>
+                    <p><strong>IVA (21%):</strong> ${document.getElementById('invoice-tax').textContent}</p>
+                    <p><strong>Total:</strong> ${document.getElementById('invoice-total').textContent}</p>
+                </div>
+                
+                <div class="footer">
+                    <p>Gracias por su confianza en Loredo Surf School</p>
+                </div>
+            `;
+            
+            // Abrir ventana de impresión
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => {
+                printWindow.print();
+                printWindow.close();
+            }, 500);
+        }
+
+        function generateInvoiceItemsForPrint() {
+            let itemsHTML = '';
+            document.querySelectorAll('.invoice-item').forEach(item => {
+                const description = item.querySelector('.item-description').value;
+                const quantity = item.querySelector('.item-quantity').value;
+                const price = item.querySelector('.item-price').value;
+                const total = (quantity * price).toFixed(2);
+                
+                itemsHTML += `
+                    <tr>
+                        <td>${description}</td>
+                        <td>${quantity}</td>
+                        <td>${price}</td>
+                        <td>${total}</td>
+                    </tr>
+                `;
+            });
+            return itemsHTML;
+        }
+    </script>
+</body>
+</html>
