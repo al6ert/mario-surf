@@ -60,10 +60,11 @@ export type Invoice = {
   client_id: number;
   date: string;
   status: 'pending' | 'paid' | 'cancelled';
+  iva_percentage: number;
   notes?: string;
   created_at: string;
   updated_at: string;
-  items: InvoiceItem[];
+  items?: InvoiceItem[];
 };
 
 export type InvoiceItem = {
@@ -88,15 +89,16 @@ export type Expense = {
 
 export type Payroll = {
   id: number;
-  monitor_id: number;
-  month: number;
-  year: number;
-  hours: number;
+  employee_id: number;
+  hours_worked: number;
   hourly_rate: number;
   bonus: number;
   deductions: number;
-  notes?: string;
+  date: string;
+  year: number;
+  month: number;
   paid: boolean;
+  notes?: string;
   created_at: string;
   updated_at: string;
 };

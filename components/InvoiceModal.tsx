@@ -11,11 +11,12 @@ interface InvoiceModalProps {
     invoiceData: Omit<Invoice, 'id' | 'created_at' | 'updated_at'>,
     items: Omit<InvoiceItem, 'id' | 'created_at'>[]
   ) => void;
+  invoices?: Invoice[];
 }
 
 type InvoiceItemForm = Omit<InvoiceItem, 'id' | 'created_at'>;
 
-export default function InvoiceModal({ invoice, clients, settings, onClose, onSave }: InvoiceModalProps) {
+export default function InvoiceModal({ invoice, clients, settings, onClose, onSave, invoices }: InvoiceModalProps) {
   const [formData, setFormData] = useState({
     number: '',
     client_id: '',
@@ -27,6 +28,7 @@ export default function InvoiceModal({ invoice, clients, settings, onClose, onSa
     { description: '', quantity: 1, price: 0, invoice_id: 0 },
   ]);
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     if (invoice) {
@@ -49,14 +51,28 @@ export default function InvoiceModal({ invoice, clients, settings, onClose, onSa
       );
     } else if (!formData.number) {
       const year = new Date().getFullYear();
-      const seq = String(settings.invoice_sequence).padStart(3, '0');
+      let lastSeq = 0;
+      if (invoices && invoices.length > 0) {
+        const facturasEsteAño = invoices.filter(inv => inv.number && inv.number.includes(`-${year}-`));
+        if (facturasEsteAño.length > 0) {
+          lastSeq = Math.max(
+            ...facturasEsteAño.map(inv => {
+              const match = inv.number.match(/-(\d{4})$/);
+              return match ? parseInt(match[1], 10) : 0;
+            })
+          );
+        }
+      }
+      const nextSeq = lastSeq + 1;
+      const seqStr = String(nextSeq).padStart(4, '0');
       const prefix = settings.invoice_prefix || 'FAC';
       setFormData(prev => ({
         ...prev,
-        number: `${prefix}-${year}-${seq}`
+        number: `${prefix}-${year}-${seqStr}`,
+        date: new Date().toISOString().slice(0, 10)
       }));
     }
-  }, [invoice, settings]);
+  }, [invoice, settings, invoices]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -78,35 +94,41 @@ export default function InvoiceModal({ invoice, clients, settings, onClose, onSa
   };
 
   const calculateSubtotal = () => {
-    const ivaFactor = 1 + (settings.iva_percentage || 21) / 100;
     const total = items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
-    return total / ivaFactor;
+    const ivaPercentage = invoice?.iva_percentage || settings.iva_percentage || 21;
+    return total / (1 + ivaPercentage / 100);
   };
 
   const calculateIVA = () => {
     const total = items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
-    return total - calculateSubtotal();
+    const subtotal = calculateSubtotal();
+    return total - subtotal;
   };
 
   const calculateTotal = () => {
     return items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    onSave(
-      {
+    setErrorMsg(null);
+    try {
+      const invoiceData = {
         number: formData.number,
         client_id: parseInt(formData.client_id),
         date: formData.date,
         status: formData.status as 'pending' | 'paid' | 'cancelled',
         notes: formData.notes,
-        items: [],
-      },
-      items
-    );
-    setLoading(false);
+        iva_percentage: invoice?.iva_percentage || settings.iva_percentage || 21
+      };
+      await onSave(invoiceData, items);
+      onClose();
+    } catch (err: any) {
+      setErrorMsg(err?.message || 'Error desconocido');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -247,7 +269,7 @@ export default function InvoiceModal({ invoice, clients, settings, onClose, onSa
               <span>{calculateSubtotal().toFixed(2)} €</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span>IVA ({settings.iva_percentage || 21}%):</span>
+              <span>IVA ({(invoice?.iva_percentage || settings.iva_percentage || 21).toFixed(0)}%):</span>
               <span>{calculateIVA().toFixed(2)} €</span>
             </div>
             <div className="flex justify-between text-lg font-bold">
@@ -255,6 +277,11 @@ export default function InvoiceModal({ invoice, clients, settings, onClose, onSa
               <span>{calculateTotal().toFixed(2)} €</span>
             </div>
           </div>
+          {errorMsg && (
+            <div className="mt-4 text-red-600 font-bold border border-red-300 bg-red-50 rounded p-2">
+              [DEBUG] Error: {errorMsg}
+            </div>
+          )}
           <div className="mt-8 flex justify-end gap-4">
             <button
               type="button"

@@ -267,24 +267,15 @@ export async function deleteBooking(id: number) {
 }
 
 // Invoice operations
-export async function createInvoice(invoice: Omit<Invoice, 'id' | 'created_at' | 'updated_at'>, items: Omit<InvoiceItem, 'id' | 'created_at'>[]) {
-  try {
-    setState({ loading: true, error: null });
-    const newInvoice = await ApiClient.createInvoice(invoice, items);
-    if (!newInvoice) throw new Error('Failed to create invoice');
-    setState({
-      invoices: [...state.invoices, newInvoice],
-      loading: false
-    });
-    return newInvoice;
-  } catch (error) {
-    setState({
-      loading: false,
-      error: error instanceof Error ? error.message : 'An error occurred while creating invoice'
-    });
-    throw error;
-  }
-}
+export const createInvoice = async (invoiceData: Omit<Invoice, 'id' | 'created_at' | 'updated_at'>, items: Omit<InvoiceItem, 'id' | 'created_at'>[]) => {
+  const state = getState();
+  const ivaPercentage = state.settings.iva_percentage || 21;
+  const invoiceWithIva = { ...invoiceData, iva_percentage: ivaPercentage };
+  const newInvoice = await ApiClient.createInvoice(invoiceWithIva, items);
+  if (!newInvoice) throw new Error('Failed to create invoice');
+  await loadData();
+  return newInvoice;
+};
 
 export async function updateInvoice(id: number, invoice: Partial<Invoice>, items?: Omit<InvoiceItem, 'id' | 'created_at'>[]) {
   try {

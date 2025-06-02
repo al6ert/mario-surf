@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { loadData, getState, subscribe, createClient, updateClient, deleteClient, createActivity, updateActivity, deleteActivity, createBooking, updateBooking, deleteBooking, createInvoice, updateInvoice, deleteInvoice, createMonitor, updateMonitor, deleteMonitor, updateSettings } from '../lib/data';
 import type { Client, Activity, Monitor, Booking, Invoice, InvoiceItem, Settings } from '../lib/supabase';
-import MonitorForm from './MonitorForm';
-import BookingForm from './BookingForm';
-import InvoiceForm from './InvoiceForm';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDashboard, faCalendar, faBook, faBicycle, faUsers, faFileText, faMoneyBill, faUserSecret, faEuro, faBarChart, faCog } from '@fortawesome/free-solid-svg-icons';
 import Calendar from './Calendar';
@@ -11,6 +8,11 @@ import Bookings from './Bookings';
 import Activities from './Activities';
 import Clients from './Clients';
 import Invoices from './Invoices';
+import Expenses from './Expenses';
+import Monitors from './Monitors';
+import Payrolls from './Payrolls';
+import Setup from './Setup';
+import Reports from './Reports';
 
 export default function App() {
   const [state, setState] = useState(getState());
@@ -25,6 +27,7 @@ export default function App() {
   const [selectedBooking, setSelectedBooking] = useState<Booking | undefined>();
   const [showInvoiceForm, setShowInvoiceForm] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [monitorSearch, setMonitorSearch] = useState('');
 
   useEffect(() => {
     // Load initial data
@@ -95,6 +98,7 @@ export default function App() {
     } else {
       await createMonitor(monitorData);
     }
+    handleHideMonitorForm();
   };
 
   // Handle booking form
@@ -186,7 +190,7 @@ export default function App() {
           <button className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition font-medium text-left ${activeSection === 'reports' ? 'bg-blue-600' : 'hover:bg-slate-700'}`} onClick={() => handleSectionChange('reports')}>
             <FontAwesomeIcon icon={faBarChart} /> Informes
           </button>
-          <button className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition font-medium text-left ${activeSection === 'settings' ? 'bg-blue-600' : 'hover:bg-slate-700'}`} onClick={() => handleSectionChange('settings')}>
+          <button className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition font-medium text-left ${activeSection === 'setup' ? 'bg-blue-600' : 'hover:bg-slate-700'}`} onClick={() => handleSectionChange('setup')}>
             <FontAwesomeIcon icon={faCog} /> Configuración
           </button>
         </nav>
@@ -262,7 +266,26 @@ export default function App() {
         {activeSection === 'invoices' && (
           <Invoices />
         )}
-        {/* Aquí iría el renderizado de las demás secciones */}
+        {/* Gastos */}
+        {activeSection === 'expenses' && (
+          <Expenses />
+        )}
+        {/* Monitores */}
+        {activeSection === 'monitors' && (
+          <Monitors monitors={state.monitors} onRefresh={loadData} />
+        )}
+        {/* Nóminas */}
+        {activeSection === 'payroll' && (
+          <Payrolls />
+        )}
+        {/* Informes */}
+        {activeSection === 'reports' && (
+          <Reports />
+        )}
+        {/* Configuración */}
+        {activeSection === 'setup' && (
+          <Setup />
+        )}
       </main>
     </div>
   );

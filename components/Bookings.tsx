@@ -58,8 +58,7 @@ export default function Bookings() {
       // Fetch monitors
       const { data: monitorsData, error: monitorsError } = await supabase
         .from('monitors')
-        .select('*')
-        .eq('active', true);
+        .select('*');
 
       if (monitorsError) throw monitorsError;
 
@@ -392,11 +391,14 @@ export default function Bookings() {
                         <select
                           value={booking.status}
                           onChange={(e) => handleStatusChange(booking.id, e.target.value as 'confirmed' | 'pending' | 'cancelled')}
-                          className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                            booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                            booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-red-100 text-red-800'
-                          }`}
+                          className={
+                            booking.status === 'confirmed'
+                              ? 'bg-green-100 text-green-800 px-2 py-1 rounded font-semibold text-xs'
+                              : booking.status === 'pending'
+                              ? 'bg-yellow-100 text-yellow-800 px-2 py-1 rounded font-semibold text-xs'
+                              : 'bg-red-100 text-red-800 px-2 py-1 rounded font-semibold text-xs'
+                          }
+                          style={{ minWidth: 110 }}
                         >
                           <option value="confirmed">Confirmada</option>
                           <option value="pending">Pendiente</option>

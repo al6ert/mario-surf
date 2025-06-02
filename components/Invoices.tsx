@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase, Invoice, Client, Activity, Settings, InvoiceItem } from '../lib/supabase';
 import InvoiceModal from './InvoiceModal';
+import { updateInvoice, createInvoice } from '../lib/data';
 
 export default function Invoices() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -10,14 +11,17 @@ export default function Invoices() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending' | 'cancelled'>('all');
 
   useEffect(() => {
-    fetchData();
+    fetchData(true);
   }, []);
 
-  const fetchData = async () => {
-    setIsLoading(true);
+  const fetchData = async (isInitial = false) => {
+    if (isInitial) setIsInitialLoading(true);
+    else setIsLoading(true);
     const { data: invoicesData } = await supabase.from('invoices').select('*, items:invoice_items(*)').order('date', { ascending: false });
     const { data: clientsData } = await supabase.from('clients').select('*');
     const { data: activitiesData } = await supabase.from('activities').select('*');
@@ -26,7 +30,8 @@ export default function Invoices() {
     setClients(clientsData || []);
     setActivities(activitiesData || []);
     setSettings(settingsData || null);
-    setIsLoading(false);
+    if (isInitial) setIsInitialLoading(false);
+    else setIsLoading(false);
   };
 
   const handleAdd = () => {
@@ -45,27 +50,43 @@ export default function Invoices() {
     if (!error) setInvoices(invoices.filter(i => i.id !== id));
   };
 
-  const handleSave = async (invoiceData: Omit<Invoice, 'id' | 'created_at' | 'updated_at'>, items: Omit<InvoiceItem, 'id' | 'created_at'>[]) => {
-    if (selectedInvoice) {
-      // Editar
-      const { error, data } = await supabase.from('invoices').update(invoiceData).eq('id', selectedInvoice.id).select();
-      if (!error && data) setInvoices(invoices.map(i => i.id === selectedInvoice.id ? { ...data[0], items } : i));
-    } else {
-      // Crear
-      const { error, data } = await supabase.from('invoices').insert([invoiceData]).select();
-      if (!error && data) setInvoices([...invoices, { ...data[0], items }]);
+  const handleSave = async (invoiceData, items) => {
+    try {
+      if (selectedInvoice) {
+        await updateInvoice(selectedInvoice.id, invoiceData, items);
+      } else {
+        await createInvoice(invoiceData, items);
+      }
+      setIsModalOpen(false);
+      setSelectedInvoice(null);
+      await fetchData(false);
+    } catch (error) {
+      throw error;
     }
-    setIsModalOpen(false);
-    setSelectedInvoice(null);
+  };
+
+  // Nueva función para actualizar el estado inline
+  const updateStatus = async (invoice: Invoice, newStatus: string) => {
+    const typedStatus = newStatus as 'pending' | 'paid' | 'cancelled';
+    const { error, data } = await supabase
+      .from('invoices')
+      .update({ status: typedStatus })
+      .eq('id', invoice.id)
+      .select();
+    if (!error && data) {
+      setInvoices(invoices.map(i => i.id === invoice.id ? { ...i, status: typedStatus } : i));
+    }
   };
 
   const filtered = invoices.filter(inv => {
     const client = clients.find(c => c.id === inv.client_id);
     const term = searchTerm.toLowerCase();
-    return (
+    const matchesSearch =
       inv.number.toLowerCase().includes(term) ||
-      (client?.name.toLowerCase().includes(term) ?? false)
-    );
+      (client?.name.toLowerCase().includes(term) ?? false);
+    const matchesStatus =
+      statusFilter === 'all' ? true : inv.status === statusFilter;
+    return matchesSearch && matchesStatus;
   });
 
   const getClientName = (id: number) => clients.find(c => c.id === id)?.name || '';
@@ -74,6 +95,14 @@ export default function Invoices() {
     const total = invoice.items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
     return total.toFixed(2);
   };
+
+  if (isInitialLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex justify-center w-full">
@@ -106,6 +135,18 @@ export default function Invoices() {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
+            <div>
+              <select
+                value={statusFilter}
+                onChange={e => setStatusFilter(e.target.value as 'all' | 'paid' | 'pending' | 'cancelled')}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">Todas</option>
+                <option value="paid">Pagadas</option>
+                <option value="pending">Pendientes</option>
+                <option value="cancelled">Canceladas</option>
+              </select>
+            </div>
           </div>
           <div className="w-full">
             <table className="w-full min-w-0 divide-y divide-gray-200">
@@ -126,10 +167,27 @@ export default function Invoices() {
                     <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{getClientName(invoice.client_id)}</td>
                     <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{invoice.date ? new Date(invoice.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : ''}</td>
                     <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{getTotal(invoice)} €</td>
-                    <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{invoice.status}</td>
+                    <td className="px-2 py-4 whitespace-nowrap text-sm">
+                      <select
+                        value={invoice.status}
+                        onChange={e => updateStatus(invoice, e.target.value)}
+                        className={
+                          invoice.status === 'paid'
+                            ? 'bg-green-100 text-green-800 px-2 py-1 rounded font-semibold'
+                            : invoice.status === 'pending'
+                            ? 'bg-orange-100 text-orange-800 px-2 py-1 rounded font-semibold'
+                            : 'bg-red-100 text-red-800 px-2 py-1 rounded font-semibold'
+                        }
+                        style={{ minWidth: 110 }}
+                      >
+                        <option value="paid">Pagada</option>
+                        <option value="pending">Pendiente</option>
+                        <option value="cancelled">Cancelada</option>
+                      </select>
+                    </td>
                     <td className="px-2 py-4 whitespace-nowrap text-sm font-medium">
                       <button onClick={() => handleEdit(invoice)} className="text-blue-600 hover:text-blue-900 mr-3">Editar</button>
-                      <button onClick={() => handleDelete(invoice.id)} className="text-red-600 hover:text-red-900">Eliminar</button>
+                      <button onClick={() => handleDelete(invoice.id)} className="text-red-600 hover:text-red-900 mr-3">Eliminar</button>
                     </td>
                   </tr>
                 ))}
@@ -142,6 +200,7 @@ export default function Invoices() {
             invoice={selectedInvoice}
             clients={clients}
             settings={settings}
+            invoices={invoices}
             onClose={() => { setIsModalOpen(false); setSelectedInvoice(null); }}
             onSave={handleSave}
           />
