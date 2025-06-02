@@ -24,6 +24,7 @@ export default function PayrollModal({ payroll, monitors, onClose, onSave }: Pay
     deductions: 0,
     date: new Date().toISOString().slice(0, 10),
     notes: '',
+    paid: false,
   });
 
   useEffect(() => {
@@ -38,6 +39,7 @@ export default function PayrollModal({ payroll, monitors, onClose, onSave }: Pay
         deductions: payroll.deductions || 0,
         date: payroll.date || new Date().toISOString().slice(0, 10),
         notes: payroll.notes || '',
+        paid: payroll.paid || false,
       });
     }
   }, [payroll]);
@@ -62,6 +64,7 @@ export default function PayrollModal({ payroll, monitors, onClose, onSave }: Pay
       deductions: Number(formData.deductions),
       date: formData.date,
       notes: formData.notes,
+      paid: formData.paid,
     });
   };
 
@@ -199,7 +202,35 @@ export default function PayrollModal({ payroll, monitors, onClose, onSave }: Pay
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                name="paid"
+                checked={formData.paid}
+                onChange={(e) => setFormData(prev => ({ ...prev, paid: e.target.checked }))}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label className="ml-2 block text-sm text-gray-700">
+                Pagado
+              </label>
+            </div>
           </div>
+
+          {/* Resumen de salario base y total a pagar */}
+          <div className="mt-8">
+            <div className="bg-white rounded-xl shadow p-6">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-lg text-gray-700 font-medium">Salario base:</span>
+                <span className="text-lg text-gray-700 font-semibold">{(formData.hours_worked * formData.hourly_rate).toFixed(2)} €</span>
+              </div>
+              <hr className="my-2" />
+              <div className="flex justify-between items-center mt-4">
+                <span className="text-2xl font-bold text-gray-800">Total a pagar:</span>
+                <span className="text-2xl font-extrabold text-gray-900">{((formData.hours_worked * formData.hourly_rate) + Number(formData.bonus) - Number(formData.deductions)).toFixed(2)} €</span>
+              </div>
+            </div>
+          </div>
+
           <div className="mt-8 flex justify-end gap-4">
             <button
               type="button"

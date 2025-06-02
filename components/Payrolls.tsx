@@ -81,7 +81,7 @@ export default function Payrolls() {
 
   const getMonitorName = (id: number) => monitors.find(m => m.id === id)?.name || '';
   const getBase = (p: Payroll) => p.hours_worked * p.hourly_rate;
-  const getTotal = (p: Payroll) => getBase(p) + p.bonus;
+  const getTotal = (p: Payroll) => getBase(p) + p.bonus - p.deductions;
 
   if (loading) return <div className="p-4">Cargando nóminas...</div>;
   if (error) return <div className="p-4 text-red-600">Error: {error}</div>;
