@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { loadData, getState, subscribe, createClient, updateClient, deleteClient, createActivity, updateActivity, deleteActivity, createBooking, updateBooking, deleteBooking, createInvoice, updateInvoice, deleteInvoice, createMonitor, updateMonitor, deleteMonitor, updateSettings } from '../lib/data';
 import type { Client, Activity, Monitor, Booking, Invoice, InvoiceItem, Settings } from '../lib/supabase';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faDashboard, faCalendar, faBook, faBicycle, faUsers, faFileText, faMoneyBill, faUserSecret, faEuro, faBarChart, faCog } from '@fortawesome/free-solid-svg-icons';
 import Calendar from './Calendar';
 import Bookings from './Bookings';
 import Activities from './Activities';
@@ -14,6 +12,7 @@ import Payrolls from './Payrolls';
 import Setup from './Setup';
 import Reports from './Reports';
 import Dashboard from './Dashboard';
+import Sidebar from './Sidebar';
 
 export default function App() {
   const [state, setState] = useState(getState());
@@ -157,45 +156,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex bg-gray-100">
-      {/* Sidebar */}
-      <aside className="w-64 bg-slate-800 text-white flex flex-col py-8 px-4">
-        <div className="text-2xl font-bold mb-8 tracking-wide">SGTA</div>
-        <nav className="flex-1 space-y-1">
-          <button className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition font-medium text-left ${activeSection === 'dashboard' ? 'bg-blue-600' : 'hover:bg-slate-700'}`} onClick={() => handleSectionChange('dashboard')}>
-            <FontAwesomeIcon icon={faDashboard} /> Dashboard
-          </button>
-          <button className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition font-medium text-left ${activeSection === 'calendar' ? 'bg-blue-600' : 'hover:bg-slate-700'}`} onClick={() => handleSectionChange('calendar')}>
-            <FontAwesomeIcon icon={faCalendar} /> Calendario
-          </button>
-          <button className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition font-medium text-left ${activeSection === 'bookings' ? 'bg-blue-600' : 'hover:bg-slate-700'}`} onClick={() => handleSectionChange('bookings')}>
-            <FontAwesomeIcon icon={faBook} /> Reservas
-          </button>
-          <button className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition font-medium text-left ${activeSection === 'activities' ? 'bg-blue-600' : 'hover:bg-slate-700'}`} onClick={() => handleSectionChange('activities')}>
-            <FontAwesomeIcon icon={faBicycle} /> Actividades
-          </button>
-          <button className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition font-medium text-left ${activeSection === 'clients' ? 'bg-blue-600' : 'hover:bg-slate-700'}`} onClick={() => handleSectionChange('clients')}>
-            <FontAwesomeIcon icon={faUsers} /> Clientes
-          </button>
-          <button className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition font-medium text-left ${activeSection === 'invoices' ? 'bg-blue-600' : 'hover:bg-slate-700'}`} onClick={() => handleSectionChange('invoices')}>
-            <FontAwesomeIcon icon={faFileText} /> Facturación
-          </button>
-          <button className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition font-medium text-left ${activeSection === 'expenses' ? 'bg-blue-600' : 'hover:bg-slate-700'}`} onClick={() => handleSectionChange('expenses')}>
-            <FontAwesomeIcon icon={faMoneyBill} /> Gastos
-          </button>
-          <button className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition font-medium text-left ${activeSection === 'monitors' ? 'bg-blue-600' : 'hover:bg-slate-700'}`} onClick={() => handleSectionChange('monitors')}>
-            <FontAwesomeIcon icon={faUserSecret} /> Monitores
-          </button>
-          <button className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition font-medium text-left ${activeSection === 'payroll' ? 'bg-blue-600' : 'hover:bg-slate-700'}`} onClick={() => handleSectionChange('payroll')}>
-            <FontAwesomeIcon icon={faEuro} /> Nóminas
-          </button>
-          <button className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition font-medium text-left ${activeSection === 'reports' ? 'bg-blue-600' : 'hover:bg-slate-700'}`} onClick={() => handleSectionChange('reports')}>
-            <FontAwesomeIcon icon={faBarChart} /> Informes
-          </button>
-          <button className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition font-medium text-left ${activeSection === 'setup' ? 'bg-blue-600' : 'hover:bg-slate-700'}`} onClick={() => handleSectionChange('setup')}>
-            <FontAwesomeIcon icon={faCog} /> Configuración
-          </button>
-        </nav>
-      </aside>
+      <Sidebar activeSection={activeSection} onSectionChange={handleSectionChange} />
 
       {/* Main content */}
       <main className="flex-1 p-8">
