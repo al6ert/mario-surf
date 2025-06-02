@@ -3,6 +3,8 @@ import { Monitor } from '../lib/supabase';
 import MonitorModal from './MonitorModal';
 import { deleteMonitor } from '../lib/data';
 import { supabase } from '../lib/supabase';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUserSecret } from '@fortawesome/free-solid-svg-icons';
 
 interface MonitorsProps {
   monitors: Monitor[];
@@ -57,6 +59,7 @@ export default function Monitors({ monitors, onRefresh }: MonitorsProps) {
       <div className="w-full px-2 md:px-6">
         <div className="flex flex-row justify-between items-center mt-4 mb-6">
           <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
+            <FontAwesomeIcon icon={faUserSecret} className="w-7 h-7 text-gray-700" />
             Monitores
           </h1>
           <button

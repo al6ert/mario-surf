@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase, Payroll, Monitor } from '../lib/supabase';
 import PayrollModal from './PayrollModal';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEuro } from '@fortawesome/free-solid-svg-icons';
 
 const MONTHS = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -91,6 +93,7 @@ export default function Payrolls() {
       <div className="w-full px-2 md:px-6">
         <div className="flex flex-row justify-between items-center mt-4 mb-6">
           <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
+            <FontAwesomeIcon icon={faEuro} className="w-7 h-7 text-gray-700" />
             Nóminas
           </h1>
           <button

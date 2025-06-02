@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase, Invoice, Client, Activity, Settings, InvoiceItem } from '../lib/supabase';
 import InvoiceModal from './InvoiceModal';
 import { updateInvoice, createInvoice } from '../lib/data';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faFileText } from '@fortawesome/free-solid-svg-icons';
 
 export default function Invoices() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -109,10 +111,8 @@ export default function Invoices() {
       <div className="w-full px-2 md:px-6">
         <div className="flex flex-row justify-between items-center mt-4 mb-6">
           <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-            <svg className="w-7 h-7 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-6a2 2 0 012-2h2a2 2 0 012 2v6m-6 0h6" />
-            </svg>
-            Facturación
+            <FontAwesomeIcon icon={faFileText} className="w-7 h-7 text-gray-700" />
+            Facturas
           </h1>
           <button
             onClick={handleAdd}

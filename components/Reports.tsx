@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChartBar, faFileText } from '@fortawesome/free-solid-svg-icons';
+import { faBarChart, faFileText } from '@fortawesome/free-solid-svg-icons';
 import { supabase } from '../lib/supabase';
 import type { Invoice, Expense, Booking, Activity } from '../lib/supabase';
 
@@ -250,154 +250,159 @@ export default function Reports() {
   };
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold flex items-center gap-3 mb-4">
-        <FontAwesomeIcon icon={faChartBar} /> Informes
-      </h1>
+    <div className="flex justify-center w-full">
+      <div className="w-full px-2 md:px-6">
+        <div className="flex flex-row justify-between items-center mt-4 mb-6">
+          <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
+            <FontAwesomeIcon icon={faBarChart} className="w-7 h-7 text-gray-700" />
+            Informes
+          </h1>
+        </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tipo de informe
-            </label>
-            <div className="relative inline-block w-full text-left">
-              <button
-                ref={typeButtonRef}
-                type="button"
-                className="inline-flex w-full justify-between items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-xs ring-1 ring-gray-300 ring-inset hover:bg-gray-50"
-                id="type-menu-button"
-                aria-expanded={openType}
-                aria-haspopup="true"
-                onClick={() => setOpenType((v) => !v)}
-              >
-                {reportType === 'monthly-income' && 'Ingresos mensuales'}
-                {reportType === 'monthly-expenses' && 'Gastos mensuales'}
-                {reportType === 'activity-popularity' && 'Popularidad de actividades'}
-                <svg className="-mr-1 ml-2 h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                  <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
-                </svg>
-              </button>
-              {openType && (
-                <div className="absolute z-10 mt-2 w-full origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="type-menu-button" tabIndex={-1}>
-                  <div className="py-1" role="none">
-                    <button
-                      className={`block w-full text-left px-4 py-2 text-sm ${reportType === 'monthly-income' ? 'bg-gray-100 text-gray-900' : 'text-gray-700'}`}
-                      role="menuitem"
-                      tabIndex={-1}
-                      onMouseDown={() => { setReportType('monthly-income'); setOpenType(false); }}
-                    >
-                      Ingresos mensuales
-                    </button>
-                    <button
-                      className={`block w-full text-left px-4 py-2 text-sm ${reportType === 'monthly-expenses' ? 'bg-gray-100 text-gray-900' : 'text-gray-700'}`}
-                      role="menuitem"
-                      tabIndex={-1}
-                      onMouseDown={() => { setReportType('monthly-expenses'); setOpenType(false); }}
-                    >
-                      Gastos mensuales
-                    </button>
-                    <button
-                      className={`block w-full text-left px-4 py-2 text-sm ${reportType === 'activity-popularity' ? 'bg-gray-100 text-gray-900' : 'text-gray-700'}`}
-                      role="menuitem"
-                      tabIndex={-1}
-                      onMouseDown={() => { setReportType('activity-popularity'); setOpenType(false); }}
-                    >
-                      Popularidad de actividades
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Año
-            </label>
-            <div className="relative inline-block w-full text-left">
-              <button
-                ref={yearButtonRef}
-                type="button"
-                className="inline-flex w-full justify-between items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-xs ring-1 ring-gray-300 ring-inset hover:bg-gray-50"
-                id="year-menu-button"
-                aria-expanded={openYear}
-                aria-haspopup="true"
-                onClick={() => setOpenYear((v) => !v)}
-              >
-                {year}
-                <svg className="-mr-1 ml-2 h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                  <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
-                </svg>
-              </button>
-              {openYear && (
-                <div className="absolute z-10 mt-2 w-full origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="year-menu-button" tabIndex={-1}>
-                  <div className="py-1" role="none">
-                    {availableYears.map((y) => (
+        <div className="bg-white rounded-lg shadow p-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tipo de informe
+              </label>
+              <div className="relative inline-block w-full text-left">
+                <button
+                  ref={typeButtonRef}
+                  type="button"
+                  className="inline-flex w-full justify-between items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-xs ring-1 ring-gray-300 ring-inset hover:bg-gray-50"
+                  id="type-menu-button"
+                  aria-expanded={openType}
+                  aria-haspopup="true"
+                  onClick={() => setOpenType((v) => !v)}
+                >
+                  {reportType === 'monthly-income' && 'Ingresos mensuales'}
+                  {reportType === 'monthly-expenses' && 'Gastos mensuales'}
+                  {reportType === 'activity-popularity' && 'Popularidad de actividades'}
+                  <svg className="-mr-1 ml-2 h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+                  </svg>
+                </button>
+                {openType && (
+                  <div className="absolute z-10 mt-2 w-full origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="type-menu-button" tabIndex={-1}>
+                    <div className="py-1" role="none">
                       <button
-                        key={y}
-                        className={`block w-full text-left px-4 py-2 text-sm ${year === y ? 'bg-gray-100 text-gray-900' : 'text-gray-700'}`}
+                        className={`block w-full text-left px-4 py-2 text-sm ${reportType === 'monthly-income' ? 'bg-gray-100 text-gray-900' : 'text-gray-700'}`}
                         role="menuitem"
                         tabIndex={-1}
-                        onMouseDown={() => { setYear(y); setOpenYear(false); }}
+                        onMouseDown={() => { setReportType('monthly-income'); setOpenType(false); }}
                       >
-                        {y}
+                        Ingresos mensuales
                       </button>
-                    ))}
+                      <button
+                        className={`block w-full text-left px-4 py-2 text-sm ${reportType === 'monthly-expenses' ? 'bg-gray-100 text-gray-900' : 'text-gray-700'}`}
+                        role="menuitem"
+                        tabIndex={-1}
+                        onMouseDown={() => { setReportType('monthly-expenses'); setOpenType(false); }}
+                      >
+                        Gastos mensuales
+                      </button>
+                      <button
+                        className={`block w-full text-left px-4 py-2 text-sm ${reportType === 'activity-popularity' ? 'bg-gray-100 text-gray-900' : 'text-gray-700'}`}
+                        role="menuitem"
+                        tabIndex={-1}
+                        onMouseDown={() => { setReportType('activity-popularity'); setOpenType(false); }}
+                      >
+                        Popularidad de actividades
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Año
+              </label>
+              <div className="relative inline-block w-full text-left">
+                <button
+                  ref={yearButtonRef}
+                  type="button"
+                  className="inline-flex w-full justify-between items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-xs ring-1 ring-gray-300 ring-inset hover:bg-gray-50"
+                  id="year-menu-button"
+                  aria-expanded={openYear}
+                  aria-haspopup="true"
+                  onClick={() => setOpenYear((v) => !v)}
+                >
+                  {year}
+                  <svg className="-mr-1 ml-2 h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+                  </svg>
+                </button>
+                {openYear && (
+                  <div className="absolute z-10 mt-2 w-full origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="year-menu-button" tabIndex={-1}>
+                    <div className="py-1" role="none">
+                      {availableYears.map((y) => (
+                        <button
+                          key={y}
+                          className={`block w-full text-left px-4 py-2 text-sm ${year === y ? 'bg-gray-100 text-gray-900' : 'text-gray-700'}`}
+                          role="menuitem"
+                          tabIndex={-1}
+                          onMouseDown={() => { setYear(y); setOpenYear(false); }}
+                        >
+                          {y}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-6">
-          {error}
-        </div>
-      )}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-6">
+            {error}
+          </div>
+        )}
 
-      {reportData.length > 0 && (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  {Object.keys(reportData[0]).map((header) => (
-                    <th
-                      key={header}
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      {header}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {reportData.map((row, index) => (
-                  <tr key={index}>
-                    {Object.values(row).map((value: string | number, i) => (
-                      <td
-                        key={i}
-                        className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+        {reportData.length > 0 && (
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    {Object.keys(reportData[0]).map((header) => (
+                      <th
+                        key={header}
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                       >
-                        {value}
-                      </td>
+                        {header}
+                      </th>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {reportData.map((row, index) => (
+                    <tr key={index}>
+                      {Object.values(row).map((value: string | number, i) => (
+                        <td
+                          key={i}
+                          className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                        >
+                          {value}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {!loading && !error && reportData.length === 0 && (
-        <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">
-          No hay datos para mostrar en este informe
-        </div>
-      )}
+        {!loading && !error && reportData.length === 0 && (
+          <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">
+            No hay datos para mostrar en este informe
+          </div>
+        )}
+      </div>
     </div>
   );
 } 

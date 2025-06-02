@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase, Expense } from '../lib/supabase';
 import ExpenseModal from './ExpenseModal';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faMoneyBill } from '@fortawesome/free-solid-svg-icons';
 
 const CATEGORY_LABELS: Record<string, string> = {
   supplies: 'Suministros',
@@ -98,6 +100,7 @@ export default function Expenses() {
       <div className="w-full px-2 md:px-6">
         <div className="flex flex-row justify-between items-center mt-4 mb-6">
           <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
+            <FontAwesomeIcon icon={faMoneyBill} className="w-7 h-7 text-gray-700" />
             Gastos
           </h1>
           <button

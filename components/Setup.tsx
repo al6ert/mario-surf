@@ -58,45 +58,50 @@ export default function Setup() {
   if (loading) return <div className="p-4">Cargando configuración...</div>;
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold flex items-center gap-3"><FontAwesomeIcon icon={faCog} /> Configuración</h1>
-        <span className="text-gray-500 text-base">Fecha: {new Date().toLocaleDateString()}</span>
-      </div>
-      <div className="bg-white rounded-lg shadow p-6">
-        <form onSubmit={handleSave} className="max-w-xl mx-auto">
-          <h2 className="text-xl font-bold mb-4">Configuración General</h2>
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="block mb-1 font-medium">Nombre de la empresa:</label>
-              <input type="text" name="company_name" value={form.company_name || ''} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+    <div className="flex justify-center w-full">
+      <div className="w-full px-2 md:px-6">
+        <div className="flex flex-row justify-between items-center mt-4 mb-6">
+          <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
+            <FontAwesomeIcon icon={faCog} className="w-7 h-7 text-gray-700" />
+            Configuración
+          </h1>
+          <span className="text-gray-500 text-base">Fecha: {new Date().toLocaleDateString()}</span>
+        </div>
+        <div className="bg-white rounded-lg shadow p-6">
+          <form onSubmit={handleSave} className="max-w-xl mx-auto">
+            <h2 className="text-xl font-bold mb-4">Configuración General</h2>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block mb-1 font-medium">Nombre de la empresa:</label>
+                <input type="text" name="company_name" value={form.company_name || ''} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+              </div>
+              <div>
+                <label className="block mb-1 font-medium">Dirección:</label>
+                <input type="text" name="company_address" value={form.company_address || ''} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+              </div>
             </div>
-            <div>
-              <label className="block mb-1 font-medium">Dirección:</label>
-              <input type="text" name="company_address" value={form.company_address || ''} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block mb-1 font-medium">Teléfono:</label>
+                <input type="text" name="company_phone" value={form.company_phone || ''} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+              </div>
+              <div>
+                <label className="block mb-1 font-medium">Email:</label>
+                <input type="email" name="company_email" value={form.company_email || ''} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+              </div>
             </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="block mb-1 font-medium">Teléfono:</label>
-              <input type="text" name="company_phone" value={form.company_phone || ''} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+            <h2 className="text-xl font-bold mt-8 mb-4">Configuración de Facturación</h2>
+            <div className="mb-4">
+              <label className="block mb-1 font-medium">Porcentaje de IVA (%):</label>
+              <input type="number" name="iva_percentage" value={form.iva_percentage || ''} onChange={handleChange} className="w-full border rounded px-3 py-2" />
             </div>
-            <div>
-              <label className="block mb-1 font-medium">Email:</label>
-              <input type="email" name="company_email" value={form.company_email || ''} onChange={handleChange} className="w-full border rounded px-3 py-2" />
-            </div>
-          </div>
-          <h2 className="text-xl font-bold mt-8 mb-4">Configuración de Facturación</h2>
-          <div className="mb-4">
-            <label className="block mb-1 font-medium">Porcentaje de IVA (%):</label>
-            <input type="number" name="iva_percentage" value={form.iva_percentage || ''} onChange={handleChange} className="w-full border rounded px-3 py-2" />
-          </div>
-          {error && <div className="text-red-600 mb-2">{error}</div>}
-          {success && <div className="text-green-600 mb-2">¡Configuración guardada!</div>}
-          <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded font-semibold" disabled={saving}>
-            {saving ? 'Guardando...' : 'Guardar Configuración'}
-          </button>
-        </form>
+            {error && <div className="text-red-600 mb-2">{error}</div>}
+            {success && <div className="text-green-600 mb-2">¡Configuración guardada!</div>}
+            <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded font-semibold" disabled={saving}>
+              {saving ? 'Guardando...' : 'Guardar Configuración'}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );
