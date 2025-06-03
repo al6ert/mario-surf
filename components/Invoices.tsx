@@ -14,7 +14,7 @@ export default function Invoices() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending' | 'cancelled'>('all');
   const [page, setPage] = useState(1);
-  const limit = 10;
+  const [limit, setLimit] = useState(20);
 
   // Estados auxiliares para los filtros aplicados
   const [appliedSearch, setAppliedSearch] = useState('');
@@ -135,6 +135,7 @@ export default function Invoices() {
             onStatusChange={handleStatusChange}
             loading={loading}
             error={error}
+            onLimitChange={newLimit => { setLimit(newLimit); setPage(1); }}
           />
         </div>
         {isModalOpen && (
