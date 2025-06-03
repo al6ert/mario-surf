@@ -500,4 +500,39 @@ export async function deletePayroll(id: number) {
 // Get current state
 export function getState(): AppState {
   return state;
+}
+
+// Generador de número de factura
+export function generateNextInvoiceNumber(lastNumber: string | null, prefix: string, year: number): string {
+  let nextSeq = 1;
+  if (lastNumber) {
+    // Formato con año: FAC-2025-0001
+    const matchWithYear = lastNumber.match(/^(\w+)-(\d{4})-(\d+)$/);
+    // Formato sin año: INV-001
+    const matchNoYear = lastNumber.match(/^(\w+)-(\d+)$/);
+
+    if (matchWithYear) {
+      const lastYear = parseInt(matchWithYear[2], 10);
+      const lastSeq = parseInt(matchWithYear[3], 10);
+      if (lastYear === year) {
+        nextSeq = lastSeq + 1;
+      } else {
+        nextSeq = 1;
+      }
+    } else if (matchNoYear) {
+      const lastSeq = parseInt(matchNoYear[2], 10);
+      nextSeq = lastSeq + 1;
+      if (year > 0) {
+        return `${prefix}-${year}-${String(nextSeq).padStart(4, '0')}`;
+      } else {
+        return `${prefix}-${String(nextSeq).padStart(3, '0')}`;
+      }
+    }
+  }
+  if (prefix && year) {
+    return `${prefix}-${year}-${String(nextSeq).padStart(4, '0')}`;
+  } else if (prefix) {
+    return `${prefix}-${String(nextSeq).padStart(3, '0')}`;
+  }
+  return String(nextSeq);
 } 

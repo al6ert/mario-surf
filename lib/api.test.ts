@@ -1,5 +1,6 @@
 import { ApiClient } from './api';
 import { supabase } from './supabase';
+import { generateNextInvoiceNumber } from './data';
 
 // Flexible chainable mock for supabase queries
 function createQueryMock(finalResult: any) {
@@ -113,6 +114,21 @@ describe('ApiClient', () => {
       expect(mockChain.or).toHaveBeenCalledWith('c.not.is.null,number.ilike.%21%');
       expect(mockChain.eq).toHaveBeenCalledWith('status', 'paid');
       expect(result).toEqual(mockResponse);
+    });
+  });
+
+  describe('generateNextInvoiceNumber', () => {
+    it('genera el siguiente número para formato FAC-2025-0001', () => {
+      expect(generateNextInvoiceNumber('FAC-2025-0001', 'FAC', 2025)).toBe('FAC-2025-0002');
+      expect(generateNextInvoiceNumber('FAC-2025-0099', 'FAC', 2025)).toBe('FAC-2025-0100');
+    });
+   
+    it('reinicia la secuencia si cambia el año', () => {
+      expect(generateNextInvoiceNumber('FAC-2024-0023', 'FAC', 2025)).toBe('FAC-2025-0001');
+    });
+    it('genera el primer número si no hay anterior', () => {
+      expect(generateNextInvoiceNumber(null, 'FAC', 2025)).toBe('FAC-2025-0001');
+      expect(generateNextInvoiceNumber('', 'INV', 2025)).toBe('INV-2025-0001');
     });
   });
 }); 

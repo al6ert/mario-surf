@@ -715,4 +715,19 @@ export class ApiClient {
       return this.handleError(error);
     }
   }
+
+  static async getLastInvoiceNumber() {
+    try {
+      const { data, error } = await supabase
+        .from('invoices')
+        .select('number')
+        .order('id', { ascending: false })
+        .limit(1)
+        .single();
+      if (error) throw error;
+      return data?.number || null;
+    } catch (error) {
+      return null;
+    }
+  }
 } 

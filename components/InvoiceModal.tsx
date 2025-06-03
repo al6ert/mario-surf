@@ -4,6 +4,8 @@ import { useAppContext } from '../contexts/AppContext';
 import { TrashIcon } from '@heroicons/react/24/solid';
 import { Combobox } from '@headlessui/react';
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid';
+import { ApiClient } from '../lib/api';
+import { generateNextInvoiceNumber } from '../lib/data';
 
 interface InvoiceModalProps {
   invoice: Invoice | null;
@@ -44,13 +46,18 @@ export default function InvoiceModal({ invoice, onClose, onSave }: InvoiceModalP
       });
       setItems(invoice.items || []);
     } else {
-      // Generar número de factura
-      const nextNumber = `${settings?.invoice_prefix || 'INV'}-${String(settings?.invoice_sequence || 1).padStart(4, '0')}`;
-      setFormData(prev => ({
-        ...prev,
-        number: nextNumber,
-        iva_percentage: settings?.iva_percentage || 21
-      }));
+      // Generar número de factura automáticamente
+      const fetchNextNumber = async () => {
+        const lastNumber = await ApiClient.getLastInvoiceNumber();
+        const currentYear = new Date().getFullYear();
+        const nextNumber = generateNextInvoiceNumber(lastNumber, 'INV', currentYear);
+        setFormData(prev => ({
+          ...prev,
+          number: nextNumber,
+          iva_percentage: settings?.iva_percentage || 21
+        }));
+      };
+      fetchNextNumber();
       setItems([{ description: '', quantity: 1, price: 0, invoice_id: 0 }]);
     }
   }, [invoice, settings]);
@@ -131,6 +138,7 @@ export default function InvoiceModal({ invoice, onClose, onSave }: InvoiceModalP
                         onChange={e => setFormData({ ...formData, number: e.target.value })}
                         className="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
                         required
+                        readOnly
                       />
                     </div>
                   </div>
