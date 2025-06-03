@@ -48,9 +48,10 @@ export default function InvoiceModal({ invoice, onClose, onSave }: InvoiceModalP
       const nextNumber = `${settings?.invoice_prefix || 'INV'}-${String(settings?.invoice_sequence || 1).padStart(4, '0')}`;
       setFormData(prev => ({
         ...prev,
-        number: nextNumber
+        number: nextNumber,
+        iva_percentage: settings?.iva_percentage || 21
       }));
-      setItems([{ description: '', quantity: 1, price: 0, invoice_id: 0 }]); // Un item vacío por defecto
+      setItems([{ description: '', quantity: 1, price: 0, invoice_id: 0 }]);
     }
   }, [invoice, settings]);
 
