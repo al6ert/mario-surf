@@ -279,19 +279,10 @@ export const createInvoice = async (invoiceData: Omit<Invoice, 'id' | 'created_a
 
 export async function updateInvoice(id: number, invoice: Partial<Invoice>, items?: Omit<InvoiceItem, 'id' | 'created_at'>[]) {
   try {
-    setState({ loading: true, error: null });
     const updatedInvoice = await ApiClient.updateInvoice(id, invoice, items);
     if (!updatedInvoice) throw new Error('Failed to update invoice');
-    setState({
-      invoices: state.invoices.map(i => i.id === id ? updatedInvoice : i),
-      loading: false
-    });
     return updatedInvoice;
   } catch (error) {
-    setState({
-      loading: false,
-      error: error instanceof Error ? error.message : 'An error occurred while updating invoice'
-    });
     throw error;
   }
 }

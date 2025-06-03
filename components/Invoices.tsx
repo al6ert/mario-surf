@@ -23,7 +23,7 @@ export default function Invoices() {
     total,
     loading,
     error,
-    refresh
+    refresh: refreshTable
   } = usePaginatedData('Invoices', {
     page,
     limit,
@@ -47,12 +47,12 @@ export default function Invoices() {
   const handleDelete = async (id: number) => {
     if (!confirm('¿Eliminar esta factura?')) return;
     const { error } = await supabase.from('invoices').delete().eq('id', id);
-    if (!error) refresh();
+    if (!error) refreshTable();
   };
 
   const handleStatusChange = async (id: number, newStatus: 'pending' | 'paid' | 'cancelled') => {
     await updateInvoice(id, { status: newStatus });
-    refresh();
+    refreshTable();
   };
 
   const handleSave = async (invoiceData, items) => {
@@ -64,7 +64,7 @@ export default function Invoices() {
       }
       setIsModalOpen(false);
       setSelectedInvoice(null);
-      refresh();
+      refreshTable();
     } catch (error) {
       throw error;
     }
