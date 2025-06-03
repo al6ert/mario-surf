@@ -73,7 +73,7 @@ export async function loadData() {
       ApiClient.getActivities(),
       ApiClient.getMonitors(),
       ApiClient.getBookings(),
-      ApiClient.getInvoices(),
+      ApiClient.getInvoices({ page: 1, limit: 100 }),
       ApiClient.getExpenses(),
       ApiClient.getPayrolls(),
       ApiClient.getSettings()
@@ -84,7 +84,7 @@ export async function loadData() {
       activities: activities || [],
       monitors: monitors || [],
       bookings: bookings || [],
-      invoices: invoices || [],
+      invoices: (invoices as { data: Invoice[] })?.data || [],
       expenses: expenses || [],
       payrolls: payrolls || [],
       settings: settings || {} as Settings,

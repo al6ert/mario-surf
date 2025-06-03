@@ -13,6 +13,7 @@ import Setup from './Setup';
 import Reports from './Reports';
 import Dashboard from './Dashboard';
 import Sidebar from './Sidebar';
+import { AppProvider } from '../contexts/AppContext';
 
 export default function App() {
   const [state, setState] = useState(getState());
@@ -155,68 +156,68 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen flex bg-gray-100">
-      <Sidebar activeSection={activeSection} onSectionChange={handleSectionChange} />
-
-      {/* Main content */}
-      <main className="flex-1 p-8">
-        {/* Dashboard */}
-        {activeSection === 'dashboard' && (
-          <Dashboard
-            bookings={state.bookings}
-            activities={state.activities}
-            monitors={state.monitors}
-            clients={state.clients}
-            invoices={state.invoices}
-            settings={state.settings}
-          />
-        )}
-        {/* Calendario */}
-        {activeSection === 'calendar' && (
-          <Calendar
-            bookings={state.bookings}
-            clients={state.clients}
-            activities={state.activities}
-            monitors={state.monitors}
-          />
-        )}
-        {/* Reservas */}
-        {activeSection === 'bookings' && (
-          <Bookings />
-        )}
-        {/* Actividades */}
-        {activeSection === 'activities' && (
-          <Activities />
-        )}
-        {/* Clientes */}
-        {activeSection === 'clients' && (
-          <Clients />
-        )}
-        {/* Facturación */}
-        {activeSection === 'invoices' && (
-          <Invoices />
-        )}
-        {/* Gastos */}
-        {activeSection === 'expenses' && (
-          <Expenses />
-        )}
-        {/* Monitores */}
-        {activeSection === 'monitors' && (
-          <Monitors monitors={state.monitors} onRefresh={loadData} />
-        )}
-        {/* Nóminas */}
-        {activeSection === 'payroll' && (
-          <Payrolls />
-        )}
-        {/* Informes */}
-        {activeSection === 'reports' && (
-          <Reports />
-        )}
-        {/* Configuración */}
-        {activeSection === 'setup' && (
-          <Setup />
-        )}
-      </main>
-    </div>
+    <AppProvider>
+      <div className="min-h-screen flex bg-gray-100">
+        <Sidebar activeSection={activeSection} onSectionChange={handleSectionChange} />
+        <main className="flex-1 p-8">
+          {/* Dashboard */}
+          {activeSection === 'dashboard' && (
+            <Dashboard
+              bookings={state.bookings}
+              activities={state.activities}
+              monitors={state.monitors}
+              clients={state.clients}
+              invoices={state.invoices}
+              settings={state.settings}
+            />
+          )}
+          {/* Calendario */}
+          {activeSection === 'calendar' && (
+            <Calendar
+              bookings={state.bookings}
+              clients={state.clients}
+              activities={state.activities}
+              monitors={state.monitors}
+            />
+          )}
+          {/* Reservas */}
+          {activeSection === 'bookings' && (
+            <Bookings />
+          )}
+          {/* Actividades */}
+          {activeSection === 'activities' && (
+            <Activities />
+          )}
+          {/* Clientes */}
+          {activeSection === 'clients' && (
+            <Clients />
+          )}
+          {/* Facturación */}
+          {activeSection === 'invoices' && (
+            <Invoices />
+          )}
+          {/* Gastos */}
+          {activeSection === 'expenses' && (
+            <Expenses />
+          )}
+          {/* Monitores */}
+          {activeSection === 'monitors' && (
+            <Monitors monitors={state.monitors} onRefresh={loadData} />
+          )}
+          {/* Nóminas */}
+          {activeSection === 'payroll' && (
+            <Payrolls />
+          )}
+          {/* Informes */}
+          {activeSection === 'reports' && (
+            <Reports />
+          )}
+          {/* Configuración */}
+          {activeSection === 'setup' && (
+            <Setup />
+          )}
+        </main>
+      </div>
+    </AppProvider>
   );
 } 

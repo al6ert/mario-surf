@@ -258,26 +258,102 @@ export class ApiClient {
   }
 
   // Invoices
-  static async getInvoices() {
+  static async getInvoices(options: {
+    page: number;
+    limit: number;
+    filters?: { search?: string; status?: string };
+    sort?: { field: string; direction: 'asc' | 'desc' };
+  }) {
     try {
-      const { data, error } = await supabase
+      const { page, limit, filters, sort } = options;
+      const from = (page - 1) * limit;
+      const to = from + limit - 1;
+  
+      // ------------------------------------------------------------
+      // 1) SELECT INICIAL:
+      //    - “*” selecciona todas las columnas de invoices.
+      //    - “c:clients()” embebe la relación clients como alias “c” (vacío),
+      //       para poder filtrar sobre c.name más abajo.
+      //    - “clients(name)” embebe el campo real ‘name’ de clients para devolverlo.
+      //    - “items:invoice_items(*)” embebe todos los campos de invoice_items.
+      //    { count: 'exact' } pide el conteo total antes de la paginación.
+      // ------------------------------------------------------------
+      let query = supabase
         .from('invoices')
-        .select(`
-          *,
-          client:clients(*),
-          items:invoice_items(*)
-        `)
-        .order('date', { ascending: false });
-      
+        .select(
+          `
+            *,
+            c:clients(),       
+            clients(name),     
+            items:invoice_items(*)
+          `,
+          { count: 'exact' }
+        ); // 
+  
+      // ------------------------------------------------------------
+      // 2) FILTRO DE BÚSQUEDA:
+      //    Si filters.search existe, construimos “%texto%” para ILIKE y luego:
+      //      a) Filtramos sobre el alias “c” con c.name.ilike.%…%,
+      //      b) Aplicamos OR a nivel de invoices entre “c.not.is.null” y “number.ilike.%…%”.
+      // ------------------------------------------------------------
+      if (filters?.search) {
+        const termino = `%${filters.search}%`; // comodín % para ILIKE 
+  
+        // 2a) Filtramos clientes (alias c) por nombre:
+        query = query.filter('c.name', 'ilike', termino); 
+        //    Esto genera: c.name=ilike.%…% en la URL. 
+  
+        // 2b) Ahora combinamos OR entre:
+        //     • c.not.is.null → los invoices cuyo alias c (clients) coincidió con el filtro anterior.
+        //     • number.ilike.%…% → aquellos cuyo número de factura coincida.
+        query = query.or(`c.not.is.null,number.ilike.${termino}`);
+        //    Esto genera: or=(c.not.is.null,number.ilike.%…%) en la URL. 
+      }
+  
+      // ------------------------------------------------------------
+      // 3) FILTRO POR ESTADO (AND implícito):
+      //    Si filters.status existe, encadenamos .eq('status', …).
+      // ------------------------------------------------------------
+      if (filters?.status) {
+        query = query.eq('status', filters.status); // 
+      }
+  
+      // ------------------------------------------------------------
+      // 4) ORDEN:
+      //    Si sort está definido, ordenamos por ese campo; 
+      //    si no, por “date DESC” por defecto.
+      // ------------------------------------------------------------
+      if (sort) {
+        query = query.order(sort.field, {
+          ascending: sort.direction === 'asc'
+        }); // 
+      } else {
+        query = query.order('date', { ascending: false }); // 
+      }
+  
+      // ------------------------------------------------------------
+      // 5) PAGINACIÓN:
+      //    Aplicamos range(from, to) para devolver solo la página solicitada.
+      // ------------------------------------------------------------
+      query = query.range(from, to); // 
+  
+      // ------------------------------------------------------------
+      // 6) EJECUCIÓN:
+      //    Ejecutamos la consulta y devolvemos data + count.
+      // ------------------------------------------------------------
+      const { data, error, count } = await query;
       if (error) throw error;
-      return data as (Invoice & {
-        client: Client;
-        items: InvoiceItem[];
-      })[];
+  
+      return {
+        data: data as (Invoice & { clients: { name: string }; items: InvoiceItem[] })[],
+        count
+      };
     } catch (error) {
       return this.handleError(error);
     }
   }
+  
+  
 
   static async getInvoice(id: number) {
     try {

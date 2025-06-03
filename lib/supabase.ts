@@ -114,4 +114,17 @@ export type Settings = {
   company_email?: string;
   created_at: string;
   updated_at: string;
+};
+
+export type AppState = {
+  bookings: Booking[];
+  activities: Activity[];
+  clients: Client[];
+  invoices: Invoice[];
+  expenses: Expense[];
+  monitors: Monitor[];
+  payrolls: Payroll[];
+  settings: Settings;
+  loading: boolean;
+  error: string | null;
 }; 
