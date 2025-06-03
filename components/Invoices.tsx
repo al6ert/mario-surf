@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase, Invoice } from '../lib/supabase';
 import InvoiceModal from './InvoiceModal';
 import { updateInvoice, createInvoice } from '../lib/data';
@@ -16,7 +16,24 @@ export default function Invoices() {
   const [page, setPage] = useState(1);
   const limit = 10;
 
+  // Estados auxiliares para los filtros aplicados
+  const [appliedSearch, setAppliedSearch] = useState('');
+  const [appliedStatus, setAppliedStatus] = useState<'all' | 'paid' | 'pending' | 'cancelled'>('all');
+
   const debouncedSearch = useDebounce(searchTerm, 300);
+
+  // Cuando cambian los filtros, resetea la página a 1
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, statusFilter]);
+
+  // Cuando la página es 1, aplica los filtros al hook
+  useEffect(() => {
+    if (page === 1) {
+      setAppliedSearch(debouncedSearch);
+      setAppliedStatus(statusFilter);
+    }
+  }, [debouncedSearch, statusFilter, page]);
 
   const {
     data: invoices,
@@ -28,8 +45,8 @@ export default function Invoices() {
     page,
     limit,
     filters: {
-      search: debouncedSearch,
-      status: statusFilter === 'all' ? undefined : statusFilter
+      search: appliedSearch,
+      status: appliedStatus === 'all' ? undefined : appliedStatus
     },
     sort: { field: 'date', direction: 'desc' }
   });
