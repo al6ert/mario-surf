@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { loadData, getState } from '../lib/data';
+import { ApiClient } from '../lib/api';
 import type { AppState } from '../lib/supabase';
 
 interface AppContextType {
@@ -13,6 +14,14 @@ const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AppState>(getState());
+
+  useEffect(() => {
+    const loadInitialData = async () => {
+      const newState = await loadData();
+      setState(newState);
+    };
+    loadInitialData();
+  }, []);
 
   const refresh = async () => {
     const newState = await loadData();

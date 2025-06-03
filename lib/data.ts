@@ -55,7 +55,7 @@ function setState(updates: Partial<AppState>) {
 }
 
 // Load all data from Supabase
-export async function loadData() {
+export async function loadData(): Promise<AppState> {
   try {
     setState({ loading: true, error: null });
 
@@ -79,7 +79,7 @@ export async function loadData() {
       ApiClient.getSettings()
     ]);
 
-    setState({
+    const newState = {
       clients: clients || [],
       activities: activities || [],
       monitors: monitors || [],
@@ -88,13 +88,19 @@ export async function loadData() {
       expenses: expenses || [],
       payrolls: payrolls || [],
       settings: settings || {} as Settings,
-      loading: false
-    });
+      loading: false,
+      error: null
+    };
+
+    setState(newState);
+    return newState;
   } catch (error) {
-    setState({
+    const errorState = {
       loading: false,
       error: error instanceof Error ? error.message : 'An error occurred while loading data'
-    });
+    };
+    setState(errorState);
+    return { ...state, ...errorState };
   }
 }
 
@@ -273,7 +279,6 @@ export const createInvoice = async (invoiceData: Omit<Invoice, 'id' | 'created_a
   const invoiceWithIva = { ...invoiceData, iva_percentage: ivaPercentage };
   const newInvoice = await ApiClient.createInvoice(invoiceWithIva, items);
   if (!newInvoice) throw new Error('Failed to create invoice');
-  await loadData();
   return newInvoice;
 };
 

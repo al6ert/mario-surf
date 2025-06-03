@@ -22,11 +22,6 @@ export default function Invoices() {
 
   const debouncedSearch = useDebounce(searchTerm, 300);
 
-  // Cuando cambian los filtros, resetea la página a 1
-  useEffect(() => {
-    setPage(1);
-  }, [debouncedSearch, statusFilter]);
-
   // Cuando la página es 1, aplica los filtros al hook
   useEffect(() => {
     if (page === 1) {

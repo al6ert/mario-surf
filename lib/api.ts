@@ -271,11 +271,11 @@ export class ApiClient {
   
       // ------------------------------------------------------------
       // 1) SELECT INICIAL:
-      //    - “*” selecciona todas las columnas de invoices.
-      //    - “c:clients()” embebe la relación clients como alias “c” (vacío),
+      //    - "*" selecciona todas las columnas de invoices.
+      //    - "c:clients()" embebe la relación clients como alias "c" (vacío),
       //       para poder filtrar sobre c.name más abajo.
-      //    - “clients(name)” embebe el campo real ‘name’ de clients para devolverlo.
-      //    - “items:invoice_items(*)” embebe todos los campos de invoice_items.
+      //    - "clients(name)" embebe el campo real 'name' de clients para devolverlo.
+      //    - "items:invoice_items(*)" embebe todos los campos de invoice_items.
       //    { count: 'exact' } pide el conteo total antes de la paginación.
       // ------------------------------------------------------------
       let query = supabase
@@ -292,27 +292,27 @@ export class ApiClient {
   
       // ------------------------------------------------------------
       // 2) FILTRO DE BÚSQUEDA:
-      //    Si filters.search existe, construimos “%texto%” para ILIKE y luego:
-      //      a) Filtramos sobre el alias “c” con c.name.ilike.%…%,
-      //      b) Aplicamos OR a nivel de invoices entre “c.not.is.null” y “number.ilike.%…%”.
+      //    Si filters.search existe, construimos "%texto%" para ILIKE y luego:
+      //      a) Filtramos sobre el alias "c" con c.name.ilike.%...%,
+      //      b) Aplicamos OR a nivel de invoices entre "c.not.is.null" y "number.ilike.%...%"
       // ------------------------------------------------------------
       if (filters?.search) {
         const termino = `%${filters.search}%`; // comodín % para ILIKE 
   
         // 2a) Filtramos clientes (alias c) por nombre:
         query = query.filter('c.name', 'ilike', termino); 
-        //    Esto genera: c.name=ilike.%…% en la URL. 
+        //    Esto genera: c.name=ilike.%...% en la URL. 
   
         // 2b) Ahora combinamos OR entre:
         //     • c.not.is.null → los invoices cuyo alias c (clients) coincidió con el filtro anterior.
-        //     • number.ilike.%…% → aquellos cuyo número de factura coincida.
+        //     • number.ilike.%...% → aquellos cuyo número de factura coincida.
         query = query.or(`c.not.is.null,number.ilike.${termino}`);
-        //    Esto genera: or=(c.not.is.null,number.ilike.%…%) en la URL. 
+        //    Esto genera: or=(c.not.is.null,number.ilike.%...%) en la URL. 
       }
   
       // ------------------------------------------------------------
       // 3) FILTRO POR ESTADO (AND implícito):
-      //    Si filters.status existe, encadenamos .eq('status', …).
+      //    Si filters.status existe, encadenamos .eq('status', ...)
       // ------------------------------------------------------------
       if (filters?.status) {
         query = query.eq('status', filters.status); // 
@@ -321,7 +321,7 @@ export class ApiClient {
       // ------------------------------------------------------------
       // 4) ORDEN:
       //    Si sort está definido, ordenamos por ese campo; 
-      //    si no, por “date DESC” por defecto.
+      //    si no, por "date DESC" por defecto.
       // ------------------------------------------------------------
       if (sort) {
         query = query.order(sort.field, {
@@ -424,9 +424,11 @@ export class ApiClient {
         
         if (deleteError) throw deleteError;
 
-        // Insert new items
+        // Insert new items without the id field
         const itemsWithInvoiceId = items.map(item => ({
-          ...item,
+          description: item.description,
+          quantity: item.quantity,
+          price: item.price,
           invoice_id: id
         }));
 
