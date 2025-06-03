@@ -10,6 +10,7 @@ function createQueryMock(finalResult: any) {
     ilike: jest.fn(() => chain),
     eq: jest.fn(() => chain),
     or: jest.fn(() => chain),
+    filter: jest.fn(() => chain),
     single: jest.fn(() => Promise.resolve(finalResult)),
     then: undefined, // will be set below
   };
@@ -48,8 +49,15 @@ describe('ApiClient', () => {
         limit: 10,
         filters: { search: '21' }
       });
-      expect(mockChain.select).toHaveBeenCalledWith('*, clients!inner(name), items:invoice_items(*)', { count: 'exact' });
-      expect(mockChain.or).toHaveBeenCalledWith('number.ilike.*21*,clients.name.ilike.*21*');
+      const expectedSelect = `
+                *,
+                c:clients(),       
+                clients(name),     
+                items:invoice_items(*)
+              `;
+      const actualSelect = mockChain.select.mock.calls[0][0];
+      expect(actualSelect.replace(/\s+/g, ' ').trim()).toBe(expectedSelect.replace(/\s+/g, ' ').trim());
+      expect(mockChain.or).toHaveBeenCalledWith('c.not.is.null,number.ilike.%21%');
       expect(result).toEqual(mockResponse);
     });
 
@@ -94,8 +102,15 @@ describe('ApiClient', () => {
         limit: 10,
         filters: { search: '21', status: 'paid' }
       });
-      expect(mockChain.select).toHaveBeenCalledWith('*, clients!inner(name), items:invoice_items(*)', { count: 'exact' });
-      expect(mockChain.or).toHaveBeenCalledWith('number.ilike.*21*,clients.name.ilike.*21*');
+      const expectedSelect = `
+                *,
+                c:clients(),       
+                clients(name),     
+                items:invoice_items(*)
+              `;
+      const actualSelect = mockChain.select.mock.calls[0][0];
+      expect(actualSelect.replace(/\s+/g, ' ').trim()).toBe(expectedSelect.replace(/\s+/g, ' ').trim());
+      expect(mockChain.or).toHaveBeenCalledWith('c.not.is.null,number.ilike.%21%');
       expect(mockChain.eq).toHaveBeenCalledWith('status', 'paid');
       expect(result).toEqual(mockResponse);
     });
