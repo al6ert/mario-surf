@@ -1,8 +1,11 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase, Expense } from '../lib/supabase';
 import ExpenseModal from './ExpenseModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMoneyBill } from '@fortawesome/free-solid-svg-icons';
+import { usePaginatedData } from '../hooks/usePaginatedData';
+import { useDebounce } from '../hooks/useDebounce';
+import ExpenseTable from './ExpenseTable';
 
 const CATEGORY_LABELS: Record<string, string> = {
   supplies: 'Suministros',
@@ -13,31 +16,60 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 export default function Expenses() {
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
 
+  // Estados auxiliares para los filtros aplicados
+  const [appliedSearch, setAppliedSearch] = useState('');
+  const [appliedCategory, setAppliedCategory] = useState('');
+
+  const debouncedSearch = useDebounce(searchTerm, 300);
+
+  // Aplicar filtros y resetear página cuando cambian
   useEffect(() => {
-    fetchExpenses();
-  }, []);
+    setAppliedSearch(debouncedSearch);
+    setAppliedCategory(categoryFilter);
+    setPage(1); // Resetear a página 1 cuando cambian los filtros
+  }, [debouncedSearch, categoryFilter]);
 
-  const fetchExpenses = async () => {
+  const {
+    data: expenses,
+    total,
+    loading,
+    error,
+    refresh: refreshTable
+  } = usePaginatedData('Expenses', {
+    page,
+    limit,
+    filters: {
+      search: appliedSearch,
+      category: appliedCategory === '' ? undefined : appliedCategory
+    },
+    sort: { field: 'date', direction: 'desc' }
+  });
+
+  const handleAdd = () => {
+    setSelectedExpense(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = (expense: Expense) => {
+    setSelectedExpense(expense);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm('¿Eliminar este gasto?')) return;
     try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('expenses')
-        .select('*')
-        .order('date', { ascending: false });
+      const { error } = await supabase.from('expenses').delete().eq('id', id);
       if (error) throw error;
-      setExpenses(data || []);
+      refreshTable();
     } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      console.error(err);
     }
   };
 
@@ -55,45 +87,13 @@ export default function Expenses() {
           .insert([expenseData]);
         if (error) throw error;
       }
-      await fetchExpenses();
       setIsModalOpen(false);
       setSelectedExpense(null);
+      refreshTable();
     } catch (err: any) {
-      setError(err.message);
+      console.error(err);
     }
   };
-
-  const handleEdit = (expense: Expense) => {
-    setSelectedExpense(expense);
-    setIsModalOpen(true);
-  };
-
-  const handleDelete = async (id: number) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar este gasto?')) return;
-    try {
-      const { error } = await supabase
-        .from('expenses')
-        .delete()
-        .eq('id', id);
-      if (error) throw error;
-      await fetchExpenses();
-    } catch (err: any) {
-      setError(err.message);
-    }
-  };
-
-  const filteredExpenses = expenses.filter(expense => {
-    const term = searchTerm.toLowerCase();
-    const matchesText =
-      expense.description.toLowerCase().includes(term) ||
-      CATEGORY_LABELS[expense.category].toLowerCase().includes(term) ||
-      (expense.notes || '').toLowerCase().includes(term);
-    const matchesCategory = !categoryFilter || expense.category === categoryFilter;
-    return matchesText && matchesCategory;
-  });
-
-  if (loading) return <div className="p-4">Cargando gastos...</div>;
-  if (error) return <div className="p-4 text-red-600">Error: {error}</div>;
 
   return (
     <div className="flex justify-center w-full">
@@ -104,7 +104,7 @@ export default function Expenses() {
             Gastos
           </h1>
           <button
-            onClick={() => setIsModalOpen(true)}
+            onClick={handleAdd}
             className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center shadow"
           >
             + Nuevo Gasto
@@ -136,66 +136,23 @@ export default function Expenses() {
               </select>
             </div>
           </div>
-          <div className="w-full">
-            <table className="w-full min-w-0 divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Fecha</th>
-                  <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Descripción</th>
-                  <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Categoría</th>
-                  <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Importe</th>
-                  <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Notas</th>
-                  <th className="px-2 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredExpenses.map((expense) => (
-                  <tr key={expense.id} className="hover:bg-gray-50">
-                    <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(expense.date).toLocaleDateString()}
-                    </td>
-                    <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{expense.description}</td>
-                    <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-500">{CATEGORY_LABELS[expense.category] || expense.category}</td>
-                    <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{expense.amount.toFixed(2)} €</td>
-                    <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {expense.notes && (
-                        <div className="relative group">
-                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <div className="absolute z-50 left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 p-2 bg-gray-800 text-white text-xs rounded shadow-lg whitespace-pre-line hidden group-hover:block">
-                            {expense.notes}
-                          </div>
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-2 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => handleEdit(expense)}
-                        className="text-blue-600 hover:text-blue-900 mr-4"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => handleDelete(expense.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Eliminar
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <ExpenseTable
+            expenses={expenses}
+            total={total}
+            page={page}
+            limit={limit}
+            onPageChange={setPage}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            loading={loading}
+            error={error}
+            onLimitChange={newLimit => { setLimit(newLimit); setPage(1); }}
+          />
         </div>
         {isModalOpen && (
           <ExpenseModal
             expense={selectedExpense}
-            onClose={() => {
-              setIsModalOpen(false);
-              setSelectedExpense(null);
-            }}
+            onClose={() => { setIsModalOpen(false); setSelectedExpense(null); }}
             onSave={handleSave}
           />
         )}

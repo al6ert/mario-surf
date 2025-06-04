@@ -665,15 +665,52 @@ export class ApiClient {
   }
 
   // Expenses
-  static async getExpenses() {
+  static async getExpenses(options?: {
+    page?: number;
+    limit?: number;
+    filters?: { search?: string; category?: string };
+    sort?: { field: string; direction: 'asc' | 'desc' };
+  }) {
     try {
-      const { data, error } = await supabase
+      const { page, limit, filters, sort } = options || {};
+      let query = supabase
         .from('expenses')
-        .select('*')
-        .order('date', { ascending: false });
+        .select('*', { count: 'exact' });
+
+      // Apply search filter if provided
+      if (filters?.search) {
+        const searchTerm = `%${filters.search}%`;
+        query = query.or(
+          `description.ilike.${searchTerm},notes.ilike.${searchTerm}`
+        );
+      }
+
+      // Apply category filter if provided
+      if (filters?.category) {
+        query = query.eq('category', filters.category);
+      }
+
+      // Apply sorting
+      if (sort) {
+        query = query.order(sort.field, { ascending: sort.direction === 'asc' });
+      } else {
+        query = query.order('date', { ascending: false });
+      }
+
+      // Apply pagination if provided
+      if (page && limit) {
+        const from = (page - 1) * limit;
+        const to = from + limit - 1;
+        query = query.range(from, to);
+      }
+
+      const { data, error, count } = await query;
       
       if (error) throw error;
-      return data as Expense[];
+      return {
+        data: data as Expense[],
+        count
+      };
     } catch (error) {
       return this.handleError(error);
     }

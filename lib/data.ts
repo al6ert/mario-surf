@@ -79,13 +79,13 @@ export async function loadData(): Promise<AppState> {
       ApiClient.getSettings()
     ]);
 
-    const newState = {
+    const newState: AppState = {
       clients: (clients as { data: Client[] })?.data || [],
-      activities: activities || [],
+      activities: (activities as { data: Activity[] })?.data || [],
       monitors: (monitors as { data: Monitor[] })?.data || [],
       bookings: bookings || [],
       invoices: (invoices as { data: Invoice[] })?.data || [],
-      expenses: expenses || [],
+      expenses: (expenses as { data: Expense[] })?.data || [],
       payrolls: payrolls || [],
       settings: settings || {} as Settings,
       loading: false,
@@ -329,61 +329,51 @@ export async function updateSettings(settings: Partial<Settings>) {
   }
 }
 
-// Expense operations
-export async function createExpense(expense: Omit<Expense, 'id' | 'created_at' | 'updated_at'>) {
+// Expenses
+export const getExpenses = async (options?: {
+  page?: number;
+  limit?: number;
+  filters?: { search?: string; category?: string };
+  sort?: { field: string; direction: 'asc' | 'desc' };
+}) => {
   try {
-    setState({ loading: true, error: null });
-    const newExpense = await ApiClient.createExpense(expense);
-    if (!newExpense) throw new Error('Failed to create expense');
-    setState({
-      expenses: [...state.expenses, newExpense],
-      loading: false
-    });
-    return newExpense;
+    const result = await ApiClient.getExpenses(options);
+    return result;
   } catch (error) {
-    setState({
-      loading: false,
-      error: error instanceof Error ? error.message : 'An error occurred while creating expense'
-    });
+    console.error('Error fetching expenses:', error);
     throw error;
   }
-}
+};
 
-export async function updateExpense(id: number, expense: Partial<Expense>) {
+export const createExpense = async (expense: Omit<Expense, 'id'>) => {
   try {
-    setState({ loading: true, error: null });
-    const updatedExpense = await ApiClient.updateExpense(id, expense);
-    if (!updatedExpense) throw new Error('Failed to update expense');
-    setState({
-      expenses: state.expenses.map(e => e.id === id ? updatedExpense : e),
-      loading: false
-    });
-    return updatedExpense;
+    const result = await ApiClient.createExpense(expense);
+    return result;
   } catch (error) {
-    setState({
-      loading: false,
-      error: error instanceof Error ? error.message : 'An error occurred while updating expense'
-    });
+    console.error('Error creating expense:', error);
     throw error;
   }
-}
+};
 
-export async function deleteExpense(id: number) {
+export const updateExpense = async (id: number, expense: Partial<Expense>) => {
   try {
-    setState({ loading: true, error: null });
-    await ApiClient.deleteExpense(id);
-    setState({
-      expenses: state.expenses.filter(e => e.id !== id),
-      loading: false
-    });
+    const result = await ApiClient.updateExpense(id, expense);
+    return result;
   } catch (error) {
-    setState({
-      loading: false,
-      error: error instanceof Error ? error.message : 'An error occurred while deleting expense'
-    });
+    console.error('Error updating expense:', error);
     throw error;
   }
-}
+};
+
+export const deleteExpense = async (id: number) => {
+  try {
+    const result = await ApiClient.deleteExpense(id);
+    return result;
+  } catch (error) {
+    console.error('Error deleting expense:', error);
+    throw error;
+  }
+};
 
 // Monitor operations
 export async function createMonitor(monitor: Omit<Monitor, 'id' | 'created_at' | 'updated_at'>) {
