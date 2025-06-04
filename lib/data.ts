@@ -57,7 +57,10 @@ function setState(updates: Partial<AppState>) {
 // Load all data from Supabase
 export async function loadData(): Promise<AppState> {
   try {
-    setState({ loading: true, error: null });
+    // Solo actualizar loading si no está ya cargando
+    if (!state.loading) {
+      setState({ ...state, loading: true, error: null });
+    }
 
     const [
       clients,
@@ -75,7 +78,7 @@ export async function loadData(): Promise<AppState> {
       ApiClient.getBookings(),
       ApiClient.getInvoices({ page: 1, limit: 100 }),
       ApiClient.getExpenses(),
-      ApiClient.getPayrolls(),
+      ApiClient.getPayrolls({ page: 1, limit: 100 }),
       ApiClient.getSettings()
     ]);
 
@@ -86,12 +89,13 @@ export async function loadData(): Promise<AppState> {
       bookings: bookings || [],
       invoices: (invoices as { data: Invoice[] })?.data || [],
       expenses: (expenses as { data: Expense[] })?.data || [],
-      payrolls: payrolls || [],
+      payrolls: (payrolls as { data: Payroll[] })?.data || [],
       settings: settings || {} as Settings,
       loading: false,
       error: null
     };
 
+    // Actualizar estado una sola vez con todos los datos
     setState(newState);
     return newState;
   } catch (error) {
@@ -99,7 +103,7 @@ export async function loadData(): Promise<AppState> {
       loading: false,
       error: error instanceof Error ? error.message : 'An error occurred while loading data'
     };
-    setState(errorState);
+    setState({ ...state, ...errorState });
     return { ...state, ...errorState };
   }
 }

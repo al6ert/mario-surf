@@ -777,16 +777,68 @@ export class ApiClient {
   }
 
   // Payrolls
-  static async getPayrolls() {
+  static async getPayrolls({
+    page = 1,
+    limit = 20,
+    filters,
+    sort
+  }: {
+    page?: number;
+    limit?: number;
+    filters?: {
+      search?: string;
+      status?: 'paid' | 'pending';
+    };
+    sort?: {
+      field: string;
+      direction: 'asc' | 'desc';
+    };
+  }) {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('payrolls')
-        .select('*')
-        .order('year', { ascending: false })
-        .order('month', { ascending: false });
+        .select(`
+          *,
+          monitors(name)
+        `, { count: 'exact' });
+
+      // Apply search filter if provided
+      if (filters?.search) {
+        const termino = `%${filters.search}%`;
+        query = query.filter('monitors.name', 'ilike', termino);
+        let orParts = ['monitors.not.is.null'];
+        if (!isNaN(Number(filters.search))) {
+          orParts.push(`year.eq.${filters.search}`);
+          orParts.push(`month.eq.${filters.search}`);
+        }
+        query = query.or(orParts.join(','));
+      }
+
+      // Apply status filter if provided
+      if (filters?.status) {
+        query = query.eq('paid', filters.status === 'paid');
+      }
+
+      // Apply sorting
+      if (sort) {
+        query = query.order(sort.field, { ascending: sort.direction === 'asc' });
+      } else {
+        query = query.order('year', { ascending: false })
+          .order('month', { ascending: false });
+      }
+
+      // Apply pagination
+      const from = (page - 1) * limit;
+      const to = from + limit - 1;
+      query = query.range(from, to);
+
+      const { data, error, count } = await query;
       
       if (error) throw error;
-      return data as Payroll[];
+      return {
+        data: data as (Payroll & { monitors: { name: string } })[],
+        count: count || 0
+      };
     } catch (error) {
       return this.handleError(error);
     }

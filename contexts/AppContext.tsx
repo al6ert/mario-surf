@@ -16,12 +16,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AppState>(getState());
 
   useEffect(() => {
-    const loadInitialData = async () => {
-      const newState = await loadData();
-      setState(newState);
-    };
-    loadInitialData();
-  }, []);
+    // Solo cargar datos si el estado está vacío y no está cargando
+    if (!state.clients.length && !state.loading) {
+      loadData();
+    }
+  }, [state.clients.length, state.loading]);
 
   const refresh = async () => {
     const newState = await loadData();

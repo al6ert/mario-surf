@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { loadData, getState, subscribe, createClient, updateClient, deleteClient, createActivity, updateActivity, deleteActivity, createBooking, updateBooking, deleteBooking, createInvoice, updateInvoice, deleteInvoice, createMonitor, updateMonitor, deleteMonitor, updateSettings } from '../lib/data';
+import React, { useState } from 'react';
+import { useAppContext } from '../contexts/AppContext';
+import { createClient, updateClient, createActivity, updateActivity, createMonitor, updateMonitor, createBooking, updateBooking, createInvoice, updateInvoice } from '../lib/data';
 import type { Client, Activity, Monitor, Booking, Invoice, InvoiceItem, Settings } from '../lib/supabase';
 import Calendar from './Calendar';
 import Bookings from './Bookings';
@@ -15,8 +16,8 @@ import Dashboard from './Dashboard';
 import Sidebar from './Sidebar';
 import { AppProvider } from '../contexts/AppContext';
 
-export default function App() {
-  const [state, setState] = useState(getState());
+function AppContent() {
+  const { state } = useAppContext();
   const [activeSection, setActiveSection] = useState('dashboard');
   const [showClientForm, setShowClientForm] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | undefined>();
@@ -29,15 +30,6 @@ export default function App() {
   const [showInvoiceForm, setShowInvoiceForm] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [monitorSearch, setMonitorSearch] = useState('');
-
-  useEffect(() => {
-    // Load initial data
-    loadData();
-
-    // Subscribe to state changes
-    const unsubscribe = subscribe(setState);
-    return () => unsubscribe();
-  }, []);
 
   // Handle section change
   const handleSectionChange = (section: string) => {
@@ -156,68 +148,74 @@ export default function App() {
   }
 
   return (
+    <div className="min-h-screen flex bg-gray-100">
+      <Sidebar activeSection={activeSection} onSectionChange={handleSectionChange} />
+      <main className="flex-1 p-8">
+        {/* Dashboard */}
+        {activeSection === 'dashboard' && (
+          <Dashboard
+            bookings={state.bookings}
+            activities={state.activities}
+            monitors={state.monitors}
+            clients={state.clients}
+            invoices={state.invoices}
+            settings={state.settings}
+          />
+        )}
+        {/* Calendario */}
+        {activeSection === 'calendar' && (
+          <Calendar
+            bookings={state.bookings}
+            clients={state.clients}
+            activities={state.activities}
+            monitors={state.monitors}
+          />
+        )}
+        {/* Reservas */}
+        {activeSection === 'bookings' && (
+          <Bookings />
+        )}
+        {/* Actividades */}
+        {activeSection === 'activities' && (
+          <Activities />
+        )}
+        {/* Clientes */}
+        {activeSection === 'clients' && (
+          <Clients />
+        )}
+        {/* Facturación */}
+        {activeSection === 'invoices' && (
+          <Invoices />
+        )}
+        {/* Gastos */}
+        {activeSection === 'expenses' && (
+          <Expenses />
+        )}
+        {/* Monitores */}
+        {activeSection === 'monitors' && (
+          <Monitors />
+        )}
+        {/* Nóminas */}
+        {activeSection === 'payroll' && (
+          <Payrolls />
+        )}
+        {/* Informes */}
+        {activeSection === 'reports' && (
+          <Reports />
+        )}
+        {/* Configuración */}
+        {activeSection === 'setup' && (
+          <Setup />
+        )}
+      </main>
+    </div>
+  );
+}
+
+export default function App() {
+  return (
     <AppProvider>
-      <div className="min-h-screen flex bg-gray-100">
-        <Sidebar activeSection={activeSection} onSectionChange={handleSectionChange} />
-        <main className="flex-1 p-8">
-          {/* Dashboard */}
-          {activeSection === 'dashboard' && (
-            <Dashboard
-              bookings={state.bookings}
-              activities={state.activities}
-              monitors={state.monitors}
-              clients={state.clients}
-              invoices={state.invoices}
-              settings={state.settings}
-            />
-          )}
-          {/* Calendario */}
-          {activeSection === 'calendar' && (
-            <Calendar
-              bookings={state.bookings}
-              clients={state.clients}
-              activities={state.activities}
-              monitors={state.monitors}
-            />
-          )}
-          {/* Reservas */}
-          {activeSection === 'bookings' && (
-            <Bookings />
-          )}
-          {/* Actividades */}
-          {activeSection === 'activities' && (
-            <Activities />
-          )}
-          {/* Clientes */}
-          {activeSection === 'clients' && (
-            <Clients />
-          )}
-          {/* Facturación */}
-          {activeSection === 'invoices' && (
-            <Invoices />
-          )}
-          {/* Gastos */}
-          {activeSection === 'expenses' && (
-            <Expenses />
-          )}
-          {/* Monitores */}
-          {activeSection === 'monitors' && (
-            <Monitors />
-          )}
-          {/* Nóminas */}
-          {activeSection === 'payroll' && (
-            <Payrolls />
-          )}
-          {/* Informes */}
-          {activeSection === 'reports' && (
-            <Reports />
-          )}
-          {/* Configuración */}
-          {activeSection === 'setup' && (
-            <Setup />
-          )}
-        </main>
-      </div>
+      <AppContent />
     </AppProvider>
   );
 } 

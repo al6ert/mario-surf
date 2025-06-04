@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Payroll, Monitor } from '../lib/supabase';
 
 const MONTHS = [
@@ -7,246 +7,177 @@ const MONTHS = [
 ];
 
 interface PayrollModalProps {
-  payroll: Payroll | null;
-  monitors: Monitor[];
+  isOpen: boolean;
   onClose: () => void;
-  onSave: (payrollData: Omit<Payroll, 'id' | 'created_at' | 'updated_at'>) => void;
+  onSave: (payroll: Partial<Payroll>) => void;
+  payroll?: Payroll;
+  monitors: Monitor[];
 }
 
-export default function PayrollModal({ payroll, monitors, onClose, onSave }: PayrollModalProps) {
-  const [formData, setFormData] = useState({
-    employee_id: '',
-    month: new Date().getMonth() + 1,
+export default function PayrollModal({
+  isOpen,
+  onClose,
+  onSave,
+  payroll,
+  monitors
+}: PayrollModalProps) {
+  const [formData, setFormData] = useState<Partial<Payroll>>({
+    employee_id: 0,
     year: new Date().getFullYear(),
+    month: new Date().getMonth() + 1,
     hours_worked: 0,
     hourly_rate: 0,
     bonus: 0,
     deductions: 0,
-    date: new Date().toISOString().slice(0, 10),
-    notes: '',
-    paid: false,
+    paid: false
   });
 
   useEffect(() => {
     if (payroll) {
+      setFormData(payroll);
+    } else {
       setFormData({
-        employee_id: payroll.employee_id?.toString() || '',
-        month: payroll.month,
-        year: payroll.year,
-        hours_worked: payroll.hours_worked,
-        hourly_rate: payroll.hourly_rate,
-        bonus: payroll.bonus || 0,
-        deductions: payroll.deductions || 0,
-        date: payroll.date || new Date().toISOString().slice(0, 10),
-        notes: payroll.notes || '',
-        paid: payroll.paid || false,
+        employee_id: 0,
+        year: new Date().getFullYear(),
+        month: new Date().getMonth() + 1,
+        hours_worked: 0,
+        hourly_rate: 0,
+        bonus: 0,
+        deductions: 0,
+        paid: false
       });
     }
   }, [payroll]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'number' ? Number(value) : value
-    }));
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({
-      employee_id: Number(formData.employee_id),
-      month: Number(formData.month),
-      year: Number(formData.year),
-      hours_worked: Number(formData.hours_worked),
-      hourly_rate: Number(formData.hourly_rate),
-      bonus: Number(formData.bonus),
-      deductions: Number(formData.deductions),
-      date: formData.date,
-      notes: formData.notes,
-      paid: formData.paid,
-    });
+    onSave(formData);
   };
 
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-0 bg-[rgba(0,0,0,0.15)] flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-screen overflow-y-auto my-8" onClick={e => e.stopPropagation()}>
-        <div className="flex justify-between items-center p-6 border-b">
-          <h2 className="text-xl font-semibold text-gray-800">
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="mt-3">
+          <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
             {payroll ? 'Editar Nómina' : 'Nueva Nómina'}
-          </h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        <form onSubmit={handleSubmit} className="p-6">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Monitor:</label>
+          </h3>
+          <form onSubmit={handleSubmit}>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">Monitor</label>
               <select
-                name="employee_id"
-                value={formData.employee_id}
-                onChange={handleChange}
+                value={formData.employee_id || ''}
+                onChange={e => setFormData({ ...formData, employee_id: Number(e.target.value) })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">Seleccione un monitor</option>
-                {monitors.map(m => (
-                  <option key={m.id} value={m.id}>{m.name}</option>
+                <option value="">Seleccionar monitor</option>
+                {monitors.map(monitor => (
+                  <option key={monitor.id} value={monitor.id}>
+                    {monitor.name}
+                  </option>
                 ))}
               </select>
             </div>
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Mes:</label>
-                <select
-                  name="month"
-                  value={formData.month}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  {MONTHS.map((m, i) => (
-                    <option key={i + 1} value={i + 1}>{m}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Año:</label>
-                <input
-                  type="number"
-                  name="year"
-                  value={formData.year}
-                  onChange={handleChange}
-                  required
-                  min={2000}
-                  max={2100}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Horas trabajadas:</label>
-                <input
-                  type="number"
-                  name="hours_worked"
-                  value={formData.hours_worked}
-                  onChange={handleChange}
-                  required
-                  min={0}
-                  step={0.01}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Tarifa por hora (€/h):</label>
-                <input
-                  type="number"
-                  name="hourly_rate"
-                  value={formData.hourly_rate}
-                  onChange={handleChange}
-                  required
-                  min={0}
-                  step={0.01}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Bonificación (€):</label>
-                <input
-                  type="number"
-                  name="bonus"
-                  value={formData.bonus}
-                  onChange={handleChange}
-                  min={0}
-                  step={0.01}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Deducciones (€):</label>
-                <input
-                  type="number"
-                  name="deductions"
-                  value={formData.deductions}
-                  onChange={handleChange}
-                  min={0}
-                  step={0.01}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Fecha:</label>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">Año</label>
               <input
-                type="date"
-                name="date"
-                value={formData.date}
-                onChange={handleChange}
+                type="number"
+                value={formData.year}
+                onChange={e => setFormData({ ...formData, year: parseInt(e.target.value) })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Notas:</label>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">Mes</label>
+              <select
+                value={formData.month}
+                onChange={e => setFormData({ ...formData, month: parseInt(e.target.value) })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                required
+              >
+                <option value={1}>Enero</option>
+                <option value={2}>Febrero</option>
+                <option value={3}>Marzo</option>
+                <option value={4}>Abril</option>
+                <option value={5}>Mayo</option>
+                <option value={6}>Junio</option>
+                <option value={7}>Julio</option>
+                <option value={8}>Agosto</option>
+                <option value={9}>Septiembre</option>
+                <option value={10}>Octubre</option>
+                <option value={11}>Noviembre</option>
+                <option value={12}>Diciembre</option>
+              </select>
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">Horas Trabajadas</label>
               <input
-                type="text"
-                name="notes"
-                value={formData.notes}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                type="number"
+                value={formData.hours_worked}
+                onChange={e => setFormData({ ...formData, hours_worked: parseFloat(e.target.value) })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                required
               />
             </div>
-            <div className="flex items-center">
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">Tarifa por Hora</label>
               <input
-                type="checkbox"
-                name="paid"
-                checked={formData.paid}
-                onChange={(e) => setFormData(prev => ({ ...prev, paid: e.target.checked }))}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                type="number"
+                value={formData.hourly_rate}
+                onChange={e => setFormData({ ...formData, hourly_rate: parseFloat(e.target.value) })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                required
               />
-              <label className="ml-2 block text-sm text-gray-700">
-                Pagado
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">Bonus</label>
+              <input
+                type="number"
+                value={formData.bonus}
+                onChange={e => setFormData({ ...formData, bonus: parseFloat(e.target.value) })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">Deducciones</label>
+              <input
+                type="number"
+                value={formData.deductions}
+                onChange={e => setFormData({ ...formData, deductions: parseFloat(e.target.value) })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.paid}
+                  onChange={e => setFormData({ ...formData, paid: e.target.checked })}
+                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+                <span className="ml-2 text-sm text-gray-700">Pagado</span>
               </label>
             </div>
-          </div>
-
-          {/* Resumen de salario base y total a pagar */}
-          <div className="mt-8">
-            <div className="bg-white rounded-xl shadow p-6">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-lg text-gray-700 font-medium">Salario base:</span>
-                <span className="text-lg text-gray-700 font-semibold">{(formData.hours_worked * formData.hourly_rate).toFixed(2)} €</span>
-              </div>
-              <hr className="my-2" />
-              <div className="flex justify-between items-center mt-4">
-                <span className="text-2xl font-bold text-gray-800">Total a pagar:</span>
-                <span className="text-2xl font-extrabold text-gray-900">{((formData.hours_worked * formData.hourly_rate) + Number(formData.bonus) - Number(formData.deductions)).toFixed(2)} €</span>
-              </div>
+            <div className="flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Guardar
+              </button>
             </div>
-          </div>
-
-          <div className="mt-8 flex justify-end gap-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
-            >
-              Guardar Nómina
-            </button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   );

@@ -101,6 +101,9 @@ export type Payroll = {
   notes?: string;
   created_at: string;
   updated_at: string;
+  monitors?: {
+    name: string;
+  };
 };
 
 export type Settings = {
