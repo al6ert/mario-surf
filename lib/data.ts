@@ -82,7 +82,7 @@ export async function loadData(): Promise<AppState> {
     const newState = {
       clients: clients || [],
       activities: activities || [],
-      monitors: monitors || [],
+      monitors: (monitors as { data: Monitor[] })?.data || [],
       bookings: bookings || [],
       invoices: (invoices as { data: Invoice[] })?.data || [],
       expenses: expenses || [],
@@ -388,55 +388,29 @@ export async function deleteExpense(id: number) {
 // Monitor operations
 export async function createMonitor(monitor: Omit<Monitor, 'id' | 'created_at' | 'updated_at'>) {
   try {
-    setState({ loading: true, error: null });
     const newMonitor = await ApiClient.createMonitor(monitor);
     if (!newMonitor) throw new Error('Failed to create monitor');
-    setState({
-      monitors: [...state.monitors, newMonitor],
-      loading: false
-    });
     return newMonitor;
   } catch (error) {
-    setState({
-      loading: false,
-      error: error instanceof Error ? error.message : 'An error occurred while creating monitor'
-    });
     throw error;
   }
 }
 
 export async function updateMonitor(id: number, monitor: Partial<Monitor>) {
   try {
-    setState({ loading: true, error: null });
     const updatedMonitor = await ApiClient.updateMonitor(id, monitor);
     if (!updatedMonitor) throw new Error('Failed to update monitor');
-    setState({
-      monitors: state.monitors.map(m => m.id === id ? updatedMonitor : m),
-      loading: false
-    });
     return updatedMonitor;
   } catch (error) {
-    setState({
-      loading: false,
-      error: error instanceof Error ? error.message : 'An error occurred while updating monitor'
-    });
     throw error;
   }
 }
 
 export async function deleteMonitor(id: number) {
   try {
-    setState({ loading: true, error: null });
     await ApiClient.deleteMonitor(id);
-    setState({
-      monitors: state.monitors.filter(m => m.id !== id),
-      loading: false
-    });
+    return true;
   } catch (error) {
-    setState({
-      loading: false,
-      error: error instanceof Error ? error.message : 'An error occurred while deleting monitor'
-    });
     throw error;
   }
 }

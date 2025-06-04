@@ -202,7 +202,7 @@ export default function App() {
           )}
           {/* Monitores */}
           {activeSection === 'monitors' && (
-            <Monitors monitors={state.monitors} onRefresh={loadData} />
+            <Monitors />
           )}
           {/* Nóminas */}
           {activeSection === 'payroll' && (

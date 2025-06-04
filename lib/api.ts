@@ -491,15 +491,52 @@ export class ApiClient {
   }
 
   // Monitors
-  static async getMonitors() {
+  static async getMonitors(options?: {
+    page?: number;
+    limit?: number;
+    filters?: { search?: string; active?: boolean };
+    sort?: { field: string; direction: 'asc' | 'desc' };
+  }) {
     try {
-      const { data, error } = await supabase
+      const { page, limit, filters, sort } = options || {};
+      let query = supabase
         .from('monitors')
-        .select('*')
-        .order('name');
+        .select('*', { count: 'exact' });
+
+      // Apply search filter if provided
+      if (filters?.search) {
+        const searchTerm = `%${filters.search}%`;
+        query = query.or(
+          `name.ilike.${searchTerm},email.ilike.${searchTerm},phone.ilike.${searchTerm},specialty.ilike.${searchTerm}`
+        );
+      }
+
+      // Apply active filter if provided
+      if (filters?.active !== undefined) {
+        query = query.eq('active', filters.active);
+      }
+
+      // Apply sorting
+      if (sort) {
+        query = query.order(sort.field, { ascending: sort.direction === 'asc' });
+      } else {
+        query = query.order('name', { ascending: true });
+      }
+
+      // Apply pagination if provided
+      if (page && limit) {
+        const from = (page - 1) * limit;
+        const to = from + limit - 1;
+        query = query.range(from, to);
+      }
+
+      const { data, error, count } = await query;
       
       if (error) throw error;
-      return data as Monitor[];
+      return {
+        data: data as Monitor[],
+        count
+      };
     } catch (error) {
       return this.handleError(error);
     }

@@ -1,58 +1,100 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Monitor } from '../lib/supabase';
 import MonitorModal from './MonitorModal';
-import { deleteMonitor } from '../lib/data';
-import { supabase } from '../lib/supabase';
+import { deleteMonitor, updateMonitor, createMonitor } from '../lib/data';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserSecret } from '@fortawesome/free-solid-svg-icons';
+import { usePaginatedData } from '../hooks/usePaginatedData';
+import { useDebounce } from '../hooks/useDebounce';
+import MonitorTable from './MonitorTable';
 
-interface MonitorsProps {
-  monitors: Monitor[];
-  onRefresh: () => void;
-}
-
-export default function Monitors({ monitors, onRefresh }: MonitorsProps) {
-  const [search, setSearch] = useState('');
-  const [showModal, setShowModal] = useState(false);
+export default function Monitors() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMonitor, setSelectedMonitor] = useState<Monitor | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+
+  // Estados auxiliares para los filtros aplicados
+  const [appliedSearch, setAppliedSearch] = useState('');
+  const [appliedStatus, setAppliedStatus] = useState<'all' | 'active' | 'inactive'>('all');
+
+  const debouncedSearch = useDebounce(searchTerm, 300);
+
+  // Reset page when search term changes
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm]);
+
+  // Cuando la página es 1, aplica los filtros al hook
+  useEffect(() => {
+    if (page === 1) {
+      setAppliedSearch(debouncedSearch);
+      setAppliedStatus(statusFilter);
+    }
+  }, [debouncedSearch, statusFilter, page]);
+
+  const {
+    data: monitors,
+    total,
+    loading,
+    error,
+    refresh: refreshTable
+  } = usePaginatedData('Monitors', {
+    page,
+    limit,
+    filters: {
+      search: appliedSearch,
+      active: appliedStatus === 'all' ? undefined : appliedStatus === 'active'
+    },
+    sort: { field: 'name', direction: 'asc' }
+  });
+
+  const handleAdd = () => {
+    setSelectedMonitor(null);
+    setIsModalOpen(true);
+  };
 
   const handleEdit = (monitor: Monitor) => {
     setSelectedMonitor(monitor);
-    setShowModal(true);
-  };
-
-  const handleNew = () => {
-    setSelectedMonitor(null);
-    setShowModal(true);
-  };
-
-  const handleClose = () => {
-    setSelectedMonitor(null);
-    setShowModal(false);
-    onRefresh();
+    setIsModalOpen(true);
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar este monitor?')) return;
-    await deleteMonitor(id);
-    onRefresh();
+    if (!confirm('¿Eliminar este monitor?')) return;
+    try {
+      await deleteMonitor(id);
+      refreshTable();
+    } catch (error) {
+      console.error('Error deleting monitor:', error);
+    }
+  };
+
+  const handleStatusChange = async (id: number, active: boolean) => {
+    try {
+      await updateMonitor(id, { active });
+      refreshTable();
+    } catch (error) {
+      console.error('Error updating monitor status:', error);
+    }
   };
 
   const handleSave = async (monitorData: Omit<Monitor, 'id' | 'created_at' | 'updated_at'>) => {
-    if (selectedMonitor) {
-      await supabase.from('monitors').update(monitorData).eq('id', selectedMonitor.id);
-    } else {
-      await supabase.from('monitors').insert([monitorData]);
+    try {
+      if (selectedMonitor) {
+        await updateMonitor(selectedMonitor.id, monitorData);
+      } else {
+        await createMonitor(monitorData);
+      }
+      setIsModalOpen(false);
+      setSelectedMonitor(null);
+      refreshTable();
+    } catch (error) {
+      console.error('Error saving monitor:', error);
+      throw error;
     }
-    handleClose();
   };
-
-  const filtered = monitors.filter(m =>
-    m.name.toLowerCase().includes(search.toLowerCase()) ||
-    m.email.toLowerCase().includes(search.toLowerCase()) ||
-    m.phone.toLowerCase().includes(search.toLowerCase()) ||
-    m.specialty.toLowerCase().includes(search.toLowerCase())
-  );
 
   return (
     <div className="flex justify-center w-full">
@@ -63,10 +105,13 @@ export default function Monitors({ monitors, onRefresh }: MonitorsProps) {
             Monitores
           </h1>
           <button
-            onClick={handleNew}
+            onClick={handleAdd}
             className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center shadow"
           >
-            + Nuevo Monitor
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Nuevo Monitor
           </button>
         </div>
         <div className="bg-white rounded-lg shadow-md p-2 md:p-4 mb-6 w-full">
@@ -75,62 +120,41 @@ export default function Monitors({ monitors, onRefresh }: MonitorsProps) {
               <input
                 type="text"
                 placeholder="Buscar monitores..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
+            <div>
+              <select
+                value={statusFilter}
+                onChange={e => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">Todos</option>
+                <option value="active">Activos</option>
+                <option value="inactive">Inactivos</option>
+              </select>
+            </div>
           </div>
-          <div className="w-full">
-            <table className="w-full min-w-0 divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Nombre</th>
-                  <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Email</th>
-                  <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Teléfono</th>
-                  <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Especialidad</th>
-                  <th className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Estado</th>
-                  <th className="px-2 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filtered.map(monitor => (
-                  <tr key={monitor.id} className="hover:bg-gray-50">
-                    <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{monitor.name}</td>
-                    <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{monitor.email}</td>
-                    <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{monitor.phone}</td>
-                    <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{monitor.specialty}</td>
-                    <td className="px-2 py-4 whitespace-nowrap text-center text-sm">
-                      {monitor.active ? (
-                        <span className="inline-block px-2 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded">Activo</span>
-                      ) : (
-                        <span className="inline-block px-2 py-1 text-xs font-semibold text-red-700 bg-red-100 rounded">Inactivo</span>
-                      )}
-                    </td>
-                    <td className="px-2 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => handleEdit(monitor)}
-                        className="text-blue-600 hover:text-blue-900 mr-4"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => handleDelete(monitor.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Eliminar
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <MonitorTable
+            monitors={monitors}
+            total={total}
+            page={page}
+            limit={limit}
+            onPageChange={setPage}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onStatusChange={handleStatusChange}
+            loading={loading}
+            error={error}
+            onLimitChange={newLimit => { setLimit(newLimit); setPage(1); }}
+          />
         </div>
-        {showModal && (
+        {isModalOpen && (
           <MonitorModal
             monitor={selectedMonitor}
-            onClose={handleClose}
+            onClose={() => { setIsModalOpen(false); setSelectedMonitor(null); }}
             onSave={handleSave}
           />
         )}
