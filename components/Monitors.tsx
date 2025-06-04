@@ -22,10 +22,10 @@ export default function Monitors() {
 
   const debouncedSearch = useDebounce(searchTerm, 300);
 
-  // Reset page when search term changes
+  // Reset page when debounced search changes
   useEffect(() => {
     setPage(1);
-  }, [searchTerm]);
+  }, [debouncedSearch]);
 
   // Cuando la página es 1, aplica los filtros al hook
   useEffect(() => {
