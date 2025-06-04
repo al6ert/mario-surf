@@ -15,15 +15,47 @@ export class ApiClient {
   }
 
   // Clients
-  static async getClients() {
+  static async getClients(options?: {
+    page?: number;
+    limit?: number;
+    filters?: { search?: string };
+    sort?: { field: string; direction: 'asc' | 'desc' };
+  }) {
     try {
-      const { data, error } = await supabase
+      const { page, limit, filters, sort } = options || {};
+      let query = supabase
         .from('clients')
-        .select('*')
-        .order('name');
+        .select('*', { count: 'exact' });
+
+      // Apply search filter if provided
+      if (filters?.search) {
+        const searchTerm = `%${filters.search}%`;
+        query = query.or(
+          `name.ilike.${searchTerm},email.ilike.${searchTerm},phone.ilike.${searchTerm},dni.ilike.${searchTerm}`
+        );
+      }
+
+      // Apply sorting
+      if (sort) {
+        query = query.order(sort.field, { ascending: sort.direction === 'asc' });
+      } else {
+        query = query.order('name', { ascending: true });
+      }
+
+      // Apply pagination if provided
+      if (page && limit) {
+        const from = (page - 1) * limit;
+        const to = from + limit - 1;
+        query = query.range(from, to);
+      }
+
+      const { data, error, count } = await query;
       
       if (error) throw error;
-      return data as Client[];
+      return {
+        data: data as Client[],
+        count
+      };
     } catch (error) {
       return this.handleError(error);
     }

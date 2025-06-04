@@ -69,7 +69,7 @@ export async function loadData(): Promise<AppState> {
       payrolls,
       settings
     ] = await Promise.all([
-      ApiClient.getClients(),
+      ApiClient.getClients({ page: 1, limit: 100 }),
       ApiClient.getActivities(),
       ApiClient.getMonitors(),
       ApiClient.getBookings(),
@@ -80,7 +80,7 @@ export async function loadData(): Promise<AppState> {
     ]);
 
     const newState = {
-      clients: clients || [],
+      clients: (clients as { data: Client[] })?.data || [],
       activities: activities || [],
       monitors: (monitors as { data: Monitor[] })?.data || [],
       bookings: bookings || [],

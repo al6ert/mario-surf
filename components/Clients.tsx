@@ -4,24 +4,48 @@ import ClientModal from './ClientModal';
 import { DocumentTextIcon } from '@heroicons/react/24/outline';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUsers } from '@fortawesome/free-solid-svg-icons';
+import { usePaginatedData } from '../hooks/usePaginatedData';
+import { useDebounce } from '../hooks/useDebounce';
+import ClientTable from './ClientTable';
 
 export default function Clients() {
-  const [clients, setClients] = useState<Client[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
 
+  // Estados auxiliares para los filtros aplicados
+  const [appliedSearch, setAppliedSearch] = useState('');
+
+  const debouncedSearch = useDebounce(searchTerm, 300);
+
+  // Reset page when debounced search changes
   useEffect(() => {
-    fetchClients();
-  }, []);
+    setPage(1);
+  }, [debouncedSearch]);
 
-  const fetchClients = async () => {
-    setIsLoading(true);
-    const { data, error } = await supabase.from('clients').select('*').order('name', { ascending: true });
-    if (!error) setClients(data || []);
-    setIsLoading(false);
-  };
+  // Cuando la página es 1, aplica los filtros al hook
+  useEffect(() => {
+    if (page === 1) {
+      setAppliedSearch(debouncedSearch);
+    }
+  }, [debouncedSearch, page]);
+
+  const {
+    data: clients,
+    total,
+    loading,
+    error,
+    refresh: refreshTable
+  } = usePaginatedData('Clients', {
+    page,
+    limit,
+    filters: {
+      search: appliedSearch
+    },
+    sort: { field: 'name', direction: 'asc' }
+  });
 
   const handleAdd = () => {
     setSelectedClient(null);
@@ -35,8 +59,12 @@ export default function Clients() {
 
   const handleDelete = async (id: number) => {
     if (!confirm('¿Eliminar este cliente?')) return;
-    const { error } = await supabase.from('clients').delete().eq('id', id);
-    if (!error) setClients(clients.filter(c => c.id !== id));
+    try {
+      await supabase.from('clients').delete().eq('id', id);
+      refreshTable();
+    } catch (error) {
+      console.error('Error deleting client:', error);
+    }
   };
 
   const handleSave = async (clientData: Partial<Client>) => {
@@ -49,32 +77,22 @@ export default function Clients() {
       address: clientData.address || '',
       notes: clientData.notes || '',
     };
-    if (selectedClient) {
-      // Editar
-      const { error, data } = await supabase.from('clients').update(dataToInsert).eq('id', selectedClient.id).select();
-      if (!error && data) setClients(clients.map(c => c.id === selectedClient.id ? data[0] : c));
+    try {
+      if (selectedClient) {
+        // Editar
+        await supabase.from('clients').update(dataToInsert).eq('id', selectedClient.id);
+      } else {
+        // Crear
+        await supabase.from('clients').insert([dataToInsert]);
+      }
       setIsModalOpen(false);
       setSelectedClient(null);
-    } else {
-      // Crear
-      const { error, data } = await supabase.from('clients').insert([dataToInsert]).select();
-      if (!error && data) {
-        setClients([...clients, data[0]]);
-        setIsModalOpen(false);
-        setSelectedClient(null);
-      }
+      refreshTable();
+    } catch (error) {
+      console.error('Error saving client:', error);
+      throw error;
     }
   };
-
-  const filtered = clients.filter(c => {
-    const term = searchTerm.toLowerCase();
-    return (
-      c.name.toLowerCase().includes(term) ||
-      (c.dni || '').toLowerCase().includes(term) ||
-      (c.email || '').toLowerCase().includes(term) ||
-      (c.phone || '').toLowerCase().includes(term)
-    );
-  });
 
   return (
     <div className="flex justify-center w-full">
@@ -106,46 +124,18 @@ export default function Clients() {
               />
             </div>
           </div>
-          <div className="w-full">
-            <table className="w-full min-w-0 divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Nombre</th>
-                  <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Email</th>
-                  <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Teléfono</th>
-                  <th className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Nota</th>
-                  <th className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Fecha de creación</th>
-                  <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filtered.map(client => (
-                  <tr key={client.id} className="hover:bg-gray-50">
-                    <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900 max-w-[160px] truncate">{client.name}</td>
-                    <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{client.email}</td>
-                    <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{client.phone}</td>
-                    <td className="px-2 py-4 whitespace-nowrap text-center">
-                      {client.notes ? (
-                        <div className="relative group inline-block">
-                          <DocumentTextIcon className="w-5 h-5 text-blue-500 inline-block cursor-pointer" />
-                          <div className="absolute z-10 left-1/2 -translate-x-1/2 mt-2 w-64 bg-gray-900 text-white text-xs rounded-lg px-3 py-2 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 shadow-lg">
-                            {client.notes}
-                          </div>
-                        </div>
-                      ) : null}
-                    </td>
-                    <td className="px-2 py-4 whitespace-nowrap text-center text-sm text-gray-900">
-                      {client.created_at ? new Date(client.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : ''}
-                    </td>
-                    <td className="px-2 py-4 whitespace-nowrap text-sm font-medium">
-                      <button onClick={() => handleEdit(client)} className="text-blue-600 hover:text-blue-900 mr-3">Editar</button>
-                      <button onClick={() => handleDelete(client.id)} className="text-red-600 hover:text-red-900">Eliminar</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <ClientTable
+            clients={clients || []}
+            total={total || 0}
+            page={page}
+            limit={limit}
+            onPageChange={setPage}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            loading={loading}
+            error={error}
+            onLimitChange={newLimit => { setLimit(newLimit); setPage(1); }}
+          />
         </div>
         {isModalOpen && (
           <ClientModal
