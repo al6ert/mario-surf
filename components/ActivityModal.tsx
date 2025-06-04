@@ -10,9 +10,7 @@ interface ActivityModalProps {
 export default function ActivityModal({ activity, onClose, onSave }: ActivityModalProps) {
   const [formData, setFormData] = useState<Partial<Activity>>({
     name: '',
-    duration: 60,
     price: 0,
-    max_participants: 1,
   });
 
   useEffect(() => {
@@ -67,10 +65,9 @@ export default function ActivityModal({ activity, onClose, onSave }: ActivityMod
               <input
                 type="number"
                 name="duration"
-                value={formData.duration}
+                value={formData.duration || ''}
                 onChange={handleChange}
                 min={1}
-                required
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -92,13 +89,23 @@ export default function ActivityModal({ activity, onClose, onSave }: ActivityMod
               <input
                 type="number"
                 name="max_participants"
-                value={formData.max_participants}
+                value={formData.max_participants || ''}
                 onChange={handleChange}
                 min={1}
-                required
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
+          </div>
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Descripción</label>
+            <textarea
+              name="description"
+              value={formData.description || ''}
+              onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              rows={2}
+              placeholder="Descripción de la actividad (opcional)"
+            />
           </div>
           <div className="mt-6 flex justify-end gap-4">
             <button

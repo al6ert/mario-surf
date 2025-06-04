@@ -3,24 +3,48 @@ import { supabase, Activity } from '../lib/supabase';
 import ActivityModal from './ActivityModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBicycle } from '@fortawesome/free-solid-svg-icons';
+import { usePaginatedData } from '../hooks/usePaginatedData';
+import { useDebounce } from '../hooks/useDebounce';
+import ActivityTable from './ActivityTable';
 
 export default function Activities() {
-  const [activities, setActivities] = useState<Activity[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
 
+  // Estados auxiliares para los filtros aplicados
+  const [appliedSearch, setAppliedSearch] = useState('');
+
+  const debouncedSearch = useDebounce(searchTerm, 300);
+
+  // Reset page when debounced search changes
   useEffect(() => {
-    fetchActivities();
-  }, []);
+    setPage(1);
+  }, [debouncedSearch]);
 
-  const fetchActivities = async () => {
-    setIsLoading(true);
-    const { data, error } = await supabase.from('activities').select('*').order('name', { ascending: true });
-    if (!error) setActivities(data || []);
-    setIsLoading(false);
-  };
+  // Cuando la página es 1, aplica los filtros al hook
+  useEffect(() => {
+    if (page === 1) {
+      setAppliedSearch(debouncedSearch);
+    }
+  }, [debouncedSearch, page]);
+
+  const {
+    data: activities,
+    total,
+    loading,
+    error,
+    refresh: refreshTable
+  } = usePaginatedData('Activities', {
+    page,
+    limit,
+    filters: {
+      search: appliedSearch
+    },
+    sort: { field: 'name', direction: 'asc' }
+  });
 
   const handleAdd = () => {
     setSelectedActivity(null);
@@ -34,25 +58,31 @@ export default function Activities() {
 
   const handleDelete = async (id: number) => {
     if (!confirm('¿Eliminar esta actividad?')) return;
-    const { error } = await supabase.from('activities').delete().eq('id', id);
-    if (!error) setActivities(activities.filter(a => a.id !== id));
+    try {
+      await supabase.from('activities').delete().eq('id', id);
+      refreshTable();
+    } catch (error) {
+      console.error('Error deleting activity:', error);
+    }
   };
 
   const handleSave = async (activityData: Partial<Activity>) => {
-    if (selectedActivity) {
-      // Editar
-      const { error, data } = await supabase.from('activities').update(activityData).eq('id', selectedActivity.id).select();
-      if (!error && data) setActivities(activities.map(a => a.id === selectedActivity.id ? data[0] : a));
-    } else {
-      // Crear
-      const { error, data } = await supabase.from('activities').insert([activityData]).select();
-      if (!error && data) setActivities([...activities, data[0]]);
+    try {
+      if (selectedActivity) {
+        // Editar
+        await supabase.from('activities').update(activityData).eq('id', selectedActivity.id);
+      } else {
+        // Crear
+        await supabase.from('activities').insert([activityData]);
+      }
+      setIsModalOpen(false);
+      setSelectedActivity(null);
+      refreshTable();
+    } catch (error) {
+      console.error('Error saving activity:', error);
+      throw error;
     }
-    setIsModalOpen(false);
-    setSelectedActivity(null);
   };
-
-  const filtered = activities.filter(a => a.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
     <div className="flex justify-center w-full">
@@ -63,10 +93,13 @@ export default function Activities() {
             Actividades
           </h1>
           <button
-            onClick={() => setIsModalOpen(true)}
+            onClick={handleAdd}
             className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center shadow"
           >
-            + Nueva Actividad
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Nueva Actividad
           </button>
         </div>
         <div className="bg-white rounded-lg shadow-md p-2 md:p-4 mb-6 w-full">
@@ -81,33 +114,18 @@ export default function Activities() {
               />
             </div>
           </div>
-          <div className="w-full">
-            <table className="w-full min-w-0 divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Nombre</th>
-                  <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Duración (min)</th>
-                  <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Precio (€)</th>
-                  <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Máx. participantes</th>
-                  <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filtered.map(activity => (
-                  <tr key={activity.id} className="hover:bg-gray-50">
-                    <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900 max-w-[160px] truncate">{activity.name}</td>
-                    <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{activity.duration}</td>
-                    <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{activity.price.toFixed(2)}</td>
-                    <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{activity.max_participants}</td>
-                    <td className="px-2 py-4 whitespace-nowrap text-sm font-medium">
-                      <button onClick={() => handleEdit(activity)} className="text-blue-600 hover:text-blue-900 mr-3">Editar</button>
-                      <button onClick={() => handleDelete(activity.id)} className="text-red-600 hover:text-red-900">Eliminar</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <ActivityTable
+            activities={activities || []}
+            total={total || 0}
+            page={page}
+            limit={limit}
+            onPageChange={setPage}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            loading={loading}
+            error={error}
+            onLimitChange={newLimit => { setLimit(newLimit); setPage(1); }}
+          />
         </div>
         {isModalOpen && (
           <ActivityModal

@@ -122,15 +122,45 @@ export class ApiClient {
   }
 
   // Activities
-  static async getActivities() {
+  static async getActivities(options?: {
+    page?: number;
+    limit?: number;
+    filters?: { search?: string };
+    sort?: { field: string; direction: 'asc' | 'desc' };
+  }) {
     try {
-      const { data, error } = await supabase
+      const { page, limit, filters, sort } = options || {};
+      let query = supabase
         .from('activities')
-        .select('*')
-        .order('name');
+        .select('*', { count: 'exact' });
+
+      // Apply search filter if provided
+      if (filters?.search) {
+        const searchTerm = `%${filters.search}%`;
+        query = query.ilike('name', searchTerm);
+      }
+
+      // Apply sorting
+      if (sort) {
+        query = query.order(sort.field, { ascending: sort.direction === 'asc' });
+      } else {
+        query = query.order('name', { ascending: true });
+      }
+
+      // Apply pagination if provided
+      if (page && limit) {
+        const from = (page - 1) * limit;
+        const to = from + limit - 1;
+        query = query.range(from, to);
+      }
+
+      const { data, error, count } = await query;
       
       if (error) throw error;
-      return data as Activity[];
+      return {
+        data: data as Activity[],
+        count: count || 0
+      };
     } catch (error) {
       return this.handleError(error);
     }
@@ -790,13 +820,14 @@ export class ApiClient {
       const { data, error } = await supabase
         .from('invoices')
         .select('number')
-        .order('id', { ascending: false })
+        .order('number', { ascending: false })
         .limit(1)
         .single();
+      
       if (error) throw error;
-      return data?.number || null;
+      return data?.number || 0;
     } catch (error) {
-      return null;
+      return this.handleError(error);
     }
   }
 } 
