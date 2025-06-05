@@ -89,7 +89,7 @@ export type Expense = {
 
 export type Payroll = {
   id: number;
-  employee_id: number;
+  monitor_id: number;
   hours_worked: number;
   hourly_rate: number;
   bonus: number;

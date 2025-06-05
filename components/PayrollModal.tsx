@@ -22,7 +22,7 @@ export default function PayrollModal({
   monitors
 }: PayrollModalProps) {
   const [formData, setFormData] = useState<Partial<Payroll>>({
-    employee_id: 0,
+    monitor_id: 0,
     year: new Date().getFullYear(),
     month: new Date().getMonth() + 1,
     hours_worked: 0,
@@ -37,7 +37,7 @@ export default function PayrollModal({
       setFormData(payroll);
     } else {
       setFormData({
-        employee_id: 0,
+        monitor_id: 0,
         year: new Date().getFullYear(),
         month: new Date().getMonth() + 1,
         hours_worked: 0,
@@ -67,8 +67,8 @@ export default function PayrollModal({
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700">Monitor</label>
               <select
-                value={formData.employee_id || ''}
-                onChange={e => setFormData({ ...formData, employee_id: Number(e.target.value) })}
+                value={formData.monitor_id || ''}
+                onChange={e => setFormData({ ...formData, monitor_id: Number(e.target.value) })}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 required
               >

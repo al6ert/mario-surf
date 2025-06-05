@@ -104,9 +104,9 @@ export default function InvoiceModal({ invoice, onClose, onSave }: InvoiceModalP
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" />
+        <div className="fixed inset-0 bg-[rgba(0,0,0,0.15)] transition-opacity" aria-hidden="true" onClick={onClose} />
         
-        <div className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl sm:p-6">
+        <div className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl sm:p-6" onClick={e => e.stopPropagation()}>
           <div className="absolute right-0 top-0 pr-4 pt-4">
             <button
               type="button"
