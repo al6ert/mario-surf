@@ -8,6 +8,7 @@ import PayrollTable from './PayrollTable';
 import { useDebounce } from '../hooks/useDebounce';
 import { usePaginatedData } from '../hooks/usePaginatedData';
 import { createPayroll, updatePayroll, deletePayroll } from '../lib/data';
+import { ApiClient } from '../lib/api';
 
 const MONTHS = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -35,7 +36,7 @@ export default function Payrolls() {
     }
   }, [debouncedSearch, statusFilter, page]);
 
-  const { data: payrolls, total, loading, error } = usePaginatedData('Payrolls', {
+  const { data: payrolls, total, loading, error, refresh: refreshTable } = usePaginatedData('Payrolls', {
     page,
     limit,
     filters: {
@@ -70,14 +71,9 @@ export default function Payrolls() {
 
   const handleStatusChange = async (id: number, paid: boolean) => {
     try {
-      const response = await fetch(`/api/payrolls/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ paid })
-      });
-      if (!response.ok) throw new Error('Error al actualizar el estado de la nómina');
-      // Actualizar la lista de nóminas
-      window.location.reload();
+      await ApiClient.updatePayroll(id, { paid });
+      // Forzar la recarga de datos usando la función refresh
+      refreshTable();
     } catch (error) {
       console.error('Error:', error);
       alert('Error al actualizar el estado de la nómina');
