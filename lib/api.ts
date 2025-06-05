@@ -848,12 +848,15 @@ export class ApiClient {
     try {
       const { data, error } = await supabase
         .from('payrolls')
-        .select('*')
+        .select(`
+          *,
+          monitors(name)
+        `)
         .eq('id', id)
         .single();
       
       if (error) throw error;
-      return data as Payroll;
+      return data as Payroll & { monitors: { name: string } };
     } catch (error) {
       return this.handleError(error);
     }
@@ -861,14 +864,20 @@ export class ApiClient {
 
   static async createPayroll(payroll: Omit<Payroll, 'id' | 'created_at' | 'updated_at'>) {
     try {
+      // Remove monitors from the create data as it's a relation
+      const { monitors, ...createData } = payroll;
+      
       const { data, error } = await supabase
         .from('payrolls')
-        .insert(payroll)
-        .select()
+        .insert(createData)
+        .select(`
+          *,
+          monitors(name)
+        `)
         .single();
       
       if (error) throw error;
-      return data as Payroll;
+      return data as Payroll & { monitors: { name: string } };
     } catch (error) {
       return this.handleError(error);
     }
@@ -876,15 +885,21 @@ export class ApiClient {
 
   static async updatePayroll(id: number, payroll: Partial<Payroll>) {
     try {
+      // Remove monitors from the update data as it's a relation
+      const { monitors, ...updateData } = payroll;
+      
       const { data, error } = await supabase
         .from('payrolls')
-        .update(payroll)
+        .update(updateData)
         .eq('id', id)
-        .select()
+        .select(`
+          *,
+          monitors(name)
+        `)
         .single();
       
       if (error) throw error;
-      return data as Payroll;
+      return data as Payroll & { monitors: { name: string } };
     } catch (error) {
       return this.handleError(error);
     }

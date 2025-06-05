@@ -120,7 +120,15 @@ export default function PayrollTable({
                   </select>
                 </td>
                 <td className="px-2 py-4 whitespace-nowrap text-sm font-medium">
-                  <button onClick={() => onEdit(payroll)} className="text-blue-600 hover:text-blue-900 mr-3">Editar</button>
+                  <button 
+                    onClick={() => onEdit({
+                      ...payroll,
+                      monitor_id: payroll.monitor_id
+                    })} 
+                    className="text-blue-600 hover:text-blue-900 mr-3"
+                  >
+                    Editar
+                  </button>
                   <button onClick={() => onDelete(payroll.id)} className="text-red-600 hover:text-red-900 mr-3">Eliminar</button>
                 </td>
               </tr>

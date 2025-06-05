@@ -16,7 +16,7 @@ const MONTHS = [
 ];
 
 export default function Payrolls() {
-  const { state } = useAppContext();
+  const { state, refresh } = useAppContext();
   const { monitors } = state;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPayroll, setSelectedPayroll] = useState<Payroll | undefined>();
@@ -28,6 +28,10 @@ export default function Payrolls() {
   const [appliedStatus, setAppliedStatus] = useState<'all' | 'paid' | 'pending'>('all');
 
   const debouncedSearch = useDebounce(searchTerm, 300);
+
+  useEffect(() => {
+    console.log('Current monitors:', monitors);
+  }, [monitors]);
 
   useEffect(() => {
     if (page === 1) {
@@ -52,17 +56,22 @@ export default function Payrolls() {
   };
 
   const handleEdit = (payroll: Payroll) => {
-    setSelectedPayroll(payroll);
+    console.log('Editing payroll:', payroll);
+    console.log('Available monitors:', monitors);
+    // Ensure we have the monitor_id from the payroll data
+    const payrollToEdit = {
+      ...payroll,
+      monitor_id: payroll.monitor_id // Ensure this is set correctly
+    };
+    setSelectedPayroll(payrollToEdit);
     setIsModalOpen(true);
   };
 
   const handleDelete = async (id: number) => {
     if (!confirm('¿Estás seguro de que quieres eliminar esta nómina?')) return;
     try {
-      const response = await fetch(`/api/payrolls/${id}`, { method: 'DELETE' });
-      if (!response.ok) throw new Error('Error al eliminar la nómina');
-      // Actualizar la lista de nóminas
-      window.location.reload();
+      await ApiClient.deletePayroll(id);
+      refreshTable();
     } catch (error) {
       console.error('Error:', error);
       alert('Error al eliminar la nómina');
@@ -82,20 +91,17 @@ export default function Payrolls() {
 
   const handleSave = async (payrollData: Partial<Payroll>) => {
     try {
-      const url = selectedPayroll
-        ? `/api/payrolls/${selectedPayroll.id}`
-        : '/api/payrolls';
-      const method = selectedPayroll ? 'PUT' : 'POST';
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payrollData)
-      });
-      if (!response.ok) throw new Error('Error al guardar la nómina');
+      console.log('Saving payroll data:', payrollData);
+      if (selectedPayroll) {
+        await ApiClient.updatePayroll(selectedPayroll.id, payrollData);
+      } else {
+        await ApiClient.createPayroll(payrollData as Omit<Payroll, 'id' | 'created_at' | 'updated_at'>);
+      }
       setIsModalOpen(false);
       setSelectedPayroll(undefined);
-      // Actualizar la lista de nóminas
-      window.location.reload();
+      refreshTable();
+      // Refresh the entire app state to ensure monitors are up to date
+      await refresh();
     } catch (error) {
       console.error('Error:', error);
       alert('Error al guardar la nómina');

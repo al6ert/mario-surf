@@ -16,14 +16,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AppState>(getState());
 
   useEffect(() => {
-    // Solo cargar datos si el estado está vacío y no está cargando
-    if (!state.clients.length && !state.loading) {
-      loadData();
+    // Cargar datos si el estado está vacío o si no hay monitores
+    if ((!state.clients.length || !state.monitors.length) && !state.loading) {
+      console.log('Loading initial data...');
+      loadData().then(newState => {
+        console.log('Loaded monitors:', newState.monitors);
+        setState(newState);
+      });
     }
-  }, [state.clients.length, state.loading]);
+  }, [state.clients.length, state.monitors.length, state.loading]);
 
   const refresh = async () => {
+    console.log('Refreshing app state...');
     const newState = await loadData();
+    console.log('Refreshed monitors:', newState.monitors);
     setState(newState);
   };
 

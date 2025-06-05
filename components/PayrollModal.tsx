@@ -35,10 +35,15 @@ export default function PayrollModal({
 
   useEffect(() => {
     if (payroll) {
-      setFormData(payroll);
+      console.log('Editing payroll:', payroll);
+      console.log('Available monitors:', monitors);
+      setFormData({
+        ...payroll,
+        monitor_id: payroll.monitor_id || undefined
+      });
     } else {
       setFormData({
-        monitor_id: 0,
+        monitor_id: undefined,
         year: new Date().getFullYear(),
         month: new Date().getMonth() + 1,
         hours_worked: 0,
@@ -49,10 +54,11 @@ export default function PayrollModal({
         notes: ''
       });
     }
-  }, [payroll]);
+  }, [payroll, monitors]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Submitting form data:', formData);
     onSave(formData);
   };
 
@@ -99,7 +105,11 @@ export default function PayrollModal({
                       <select
                         id="monitor"
                         value={formData.monitor_id || ''}
-                        onChange={e => setFormData({ ...formData, monitor_id: Number(e.target.value) })}
+                        onChange={e => {
+                          const monitorId = e.target.value ? Number(e.target.value) : undefined;
+                          console.log('Selected monitor:', monitorId);
+                          setFormData({ ...formData, monitor_id: monitorId });
+                        }}
                         className="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
                         required
                       >
