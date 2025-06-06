@@ -3,6 +3,7 @@ import type { Booking, Client, Activity, Monitor } from '../lib/supabase';
 import { ApiClient } from '../lib/api';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCalendar } from '@fortawesome/free-solid-svg-icons';
+import CalendarBookingCard from './CalendarBookingCard';
 
 interface CalendarProps {
   bookings: Booking[];
@@ -21,10 +22,10 @@ export default function Calendar({ bookings: initialBookings, clients: initialCl
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [bookings, setBookings] = useState<Booking[]>(initialBookings);
-  const [clients, setClients] = useState<Client[]>(initialClients);
-  const [activities, setActivities] = useState<Activity[]>(initialActivities);
-  const [monitors, setMonitors] = useState<Monitor[]>(initialMonitors);
+  const [bookings, setBookings] = useState<Booking[]>(initialBookings || []);
+  const [clients, setClients] = useState<Client[]>(initialClients || []);
+  const [activities, setActivities] = useState<Activity[]>(initialActivities || []);
+  const [monitors, setMonitors] = useState<Monitor[]>(initialMonitors || []);
   const [loading, setLoading] = useState(false);
 
   // Cargar datos cuando el componente se monta o cambia el mes
@@ -39,10 +40,10 @@ export default function Calendar({ bookings: initialBookings, clients: initialCl
           ApiClient.getMonitors()
         ]);
 
-        setBookings(newBookings || []);
-        setClients(newClients || []);
-        setActivities(newActivities || []);
-        setMonitors(newMonitors || []);
+        if (newBookings && 'data' in newBookings) setBookings(newBookings.data);
+        if (newClients && 'data' in newClients) setClients(newClients.data);
+        if (newActivities && 'data' in newActivities) setActivities(newActivities.data);
+        if (newMonitors && 'data' in newMonitors) setMonitors(newMonitors.data);
       } catch (error) {
         console.error('Error loading data:', error);
       } finally {
@@ -224,71 +225,14 @@ export default function Calendar({ bookings: initialBookings, clients: initialCl
 
           {/* Detalles del día seleccionado */}
           {selectedDate && (
-            <div className="mt-4 bg-white rounded-lg shadow">
-              <div className="px-4 py-5 sm:p-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-medium leading-6 text-gray-900">
-                    Reservas para {new Date(selectedDate).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                  </h3>
-                  <button
-                    type="button"
-                    className="text-sm font-medium text-blue-600 hover:text-blue-500"
-                    onClick={() => setSelectedDate(null)}
-                  >
-                    Cerrar
-                  </button>
-                </div>
-                <div className="mt-4 space-y-4">
-                  {bookings
-                    .filter(b => b.date === selectedDate && b.status !== 'cancelled')
-                    .sort((a, b) => a.time.localeCompare(b.time))
-                    .map(booking => {
-                      const client = clients.find(c => c.id === booking.client_id);
-                      const activity = activities.find(a => a.id === booking.activity_id);
-                      const monitor = monitors.find(m => m.id === booking.monitor_id);
-                      let statusClass = '';
-                      let statusText = '';
-                      switch (booking.status) {
-                        case 'confirmed':
-                          statusClass = 'bg-green-100 text-green-800';
-                          statusText = 'Confirmada';
-                          break;
-                        case 'pending':
-                          statusClass = 'bg-yellow-100 text-yellow-800';
-                          statusText = 'Pendiente';
-                          break;
-                      }
-                      return (
-                        <div key={booking.id} className="border-b border-gray-200 last:border-b-0 pb-4 last:pb-0">
-                          <div className="flex flex-col space-y-2">
-                            <div className="flex items-center justify-between">
-                              <h4 className="text-base font-medium text-gray-900">{activity ? activity.name : 'Actividad no encontrada'}</h4>
-                              <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusClass}`}>
-                                {statusText}
-                              </span>
-                            </div>
-                            <div className="text-sm text-gray-500">{booking.time}</div>
-                            <div className="text-sm">
-                              <span className="font-medium text-gray-900">Cliente:</span> {client ? client.name : 'Cliente no encontrado'}
-                            </div>
-                            <div className="text-sm">
-                              <span className="font-medium text-gray-900">Monitor:</span> {monitor ? monitor.name : 'Monitor no encontrado'}
-                            </div>
-                            {booking.notes && (
-                              <div className="text-sm text-gray-500">
-                                <span className="font-medium text-gray-900">Notas:</span> {booking.notes}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  {bookings.filter(b => b.date === selectedDate && b.status !== 'cancelled').length === 0 && (
-                    <div className="text-sm text-gray-500">No hay reservas para este día</div>
-                  )}
-                </div>
-              </div>
-            </div>
+            <CalendarBookingCard
+              bookings={bookings}
+              clients={clients}
+              activities={activities}
+              monitors={monitors}
+              selectedDate={selectedDate}
+              onClose={() => setSelectedDate(null)}
+            />
           )}
         </div>
       </div>
