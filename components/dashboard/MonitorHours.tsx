@@ -21,24 +21,27 @@ export default function MonitorHours({ monitors, bookings }: MonitorHoursProps) 
     return isWithinInterval(bookingDateTime, { start: thirtyDaysAgo, end: today });
   });
 
-  // Agrupar por monitor y sumar horas
+  // Agrupar por monitor.id y sumar horas
   const monitorHoursMap = new Map<number, number>();
   recentConfirmedBookings.forEach(booking => {
-    if (!booking.monitor_id) return;
+    if (typeof booking.monitor_id !== 'number') return;
     monitorHoursMap.set(
       booking.monitor_id,
       (monitorHoursMap.get(booking.monitor_id) || 0) + 1
     );
   });
 
-  // Crear lista de monitores con horas > 0 y ordenados de mayor a menor
-  const monitorStats = monitors
-    .map(monitor => ({
-      monitor,
-      totalHours: monitorHoursMap.get(monitor.id) || 0
-    }))
-    .filter(stat => stat.totalHours > 0)
+  // Solo monitores únicos con horas > 0, ordenados de mayor a menor
+  const monitorStats = Array.from(monitorHoursMap.entries())
+    .map(([monitorId, totalHours]) => {
+      const monitor = monitors.find(m => m.id === monitorId);
+      return monitor ? { monitor, totalHours } : null;
+    })
+    .filter((stat): stat is { monitor: Monitor; totalHours: number } => !!stat)
     .sort((a, b) => b.totalHours - a.totalHours);
+
+  // Log temporal para depuración
+  console.log('MonitorStats agrupados:', monitorStats);
 
   return (
     <div className="overflow-x-auto">
