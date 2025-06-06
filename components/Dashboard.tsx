@@ -7,6 +7,7 @@ import TodayBookings from './dashboard/TodayBookings';
 import UpcomingBookings from './dashboard/UpcomingBookings';
 import UnpaidInvoices from './dashboard/UnpaidInvoices';
 import MonitorHours from './dashboard/MonitorHours';
+import ActivityHours from './dashboard/ActivityHours';
 
 interface DashboardProps {
   bookings: Booking[];
@@ -78,13 +79,22 @@ export default function Dashboard({
           />
         </div>
 
-        {/* Monitor Hours Block */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-700 mb-4">Horas de Monitores (últimos 30 días)</h3>
-          <MonitorHours
-            monitors={monitors}
-            bookings={bookings}            
-          />
+        {/* Monitor Hours Block + Activity Hours Block */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-700 mb-4">Horas de Monitores (últimos 30 días)</h3>
+            <MonitorHours
+              monitors={monitors}
+              bookings={bookings}            
+            />
+          </div>
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-700 mb-4">Horas por Actividad (últimos 30 días)</h3>
+            <ActivityHours
+              activities={activities}
+              bookings={bookings}
+            />
+          </div>
         </div>
       </div>
     </div>
