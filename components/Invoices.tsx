@@ -7,28 +7,21 @@ import { faFileText } from '@fortawesome/free-solid-svg-icons';
 import { usePaginatedData, LIMIT } from '../hooks/usePaginatedData';
 import { useDebounce } from '../hooks/useDebounce';
 import InvoiceTable from './InvoiceTable';
+import { useSearch } from '../hooks/useSearch';
 
 export default function Invoices() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending' | 'cancelled'>('all');
-  const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(LIMIT);
 
-  // Estados auxiliares para los filtros aplicados
-  const [appliedSearch, setAppliedSearch] = useState('');
-  const [appliedStatus, setAppliedStatus] = useState<'all' | 'paid' | 'pending' | 'cancelled'>('all');
-
-  const debouncedSearch = useDebounce(searchTerm);
-
-  // Cuando la página es 1, aplica los filtros al hook
-  useEffect(() => {
-    if (page === 1) {
-      setAppliedSearch(debouncedSearch);
-      setAppliedStatus(statusFilter);
-    }
-  }, [debouncedSearch, statusFilter, page]);
+  const {
+    searchTerm,
+    setSearchTerm,
+    appliedSearch,
+    page,
+    setPage
+  } = useSearch();
 
   const {
     data: invoices,
@@ -40,8 +33,7 @@ export default function Invoices() {
     page,
     limit,
     filters: {
-      search: appliedSearch,
-      status: appliedStatus === 'all' ? undefined : appliedStatus
+      search: appliedSearch
     },
     sort: { field: 'date', direction: 'desc' }
   });

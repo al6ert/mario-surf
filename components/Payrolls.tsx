@@ -9,6 +9,7 @@ import { useDebounce } from '../hooks/useDebounce';
 import { usePaginatedData, LIMIT } from '../hooks/usePaginatedData';
 import { createPayroll, updatePayroll, deletePayroll } from '../lib/data';
 import { ApiClient } from '../lib/api';
+import { useSearch } from '../hooks/useSearch';
 
 const MONTHS = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -19,39 +20,32 @@ export default function Payrolls() {
   const { state, refresh } = useAppContext();
   const { monitors } = state;
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedPayroll, setSelectedPayroll] = useState<Payroll | undefined>();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending'>('all');
-  const [page, setPage] = useState(1);
+  const [selectedPayroll, setSelectedPayroll] = useState<Payroll | null>(null);
   const [limit, setLimit] = useState(LIMIT);
-  const [appliedSearch, setAppliedSearch] = useState('');
-  const [appliedStatus, setAppliedStatus] = useState<'all' | 'paid' | 'pending'>('all');
-
-  const debouncedSearch = useDebounce(searchTerm);
-
-  useEffect(() => {
-    console.log('Current monitors:', monitors);
-  }, [monitors]);
-
-  useEffect(() => {
-    if (page === 1) {
-      setAppliedSearch(debouncedSearch);
-      setAppliedStatus(statusFilter);
-    }
-  }, [debouncedSearch, statusFilter, page]);
+  
+  const {
+    searchTerm,
+    setSearchTerm,
+    appliedSearch,
+    page,
+    setPage
+  } = useSearch();
 
   const { data: payrolls, total, loading, error, refresh: refreshTable } = usePaginatedData('Payrolls', {
     page,
     limit,
     filters: {
-      search: appliedSearch,
-      status: appliedStatus === 'all' ? undefined : appliedStatus
+      search: appliedSearch
     },
     sort: { field: 'date', direction: 'desc' }
   });
 
+  useEffect(() => {
+    console.log('Current monitors:', monitors);
+  }, [monitors]);
+
   const handleAdd = () => {
-    setSelectedPayroll(undefined);
+    setSelectedPayroll(null);
     setIsModalOpen(true);
   };
 
@@ -98,7 +92,7 @@ export default function Payrolls() {
         await ApiClient.createPayroll(payrollData as Omit<Payroll, 'id' | 'created_at' | 'updated_at'>);
       }
       setIsModalOpen(false);
-      setSelectedPayroll(undefined);
+      setSelectedPayroll(null);
       refreshTable();
       // Refresh the entire app state to ensure monitors are up to date
       await refresh();
@@ -127,22 +121,11 @@ export default function Payrolls() {
           <div className="flex-1 w-full">
             <input
               type="text"
-              placeholder="Buscar por monitor..."
+              placeholder="Buscar nóminas..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-          </div>
-          <div>
-            <select
-              value={statusFilter}
-              onChange={e => setStatusFilter(e.target.value as 'all' | 'paid' | 'pending')}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">Todos los estados</option>
-              <option value="paid">Pagados</option>
-              <option value="pending">Pendientes</option>
-            </select>
           </div>
         </div>
         <PayrollTable
@@ -164,7 +147,7 @@ export default function Payrolls() {
         isOpen={isModalOpen}
         onClose={() => {
           setIsModalOpen(false);
-          setSelectedPayroll(undefined);
+          setSelectedPayroll(null);
         }}
         onSave={handleSave}
         payroll={selectedPayroll}

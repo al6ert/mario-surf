@@ -6,6 +6,7 @@ import { faMoneyBill } from '@fortawesome/free-solid-svg-icons';
 import { usePaginatedData, LIMIT } from '../hooks/usePaginatedData';
 import { useDebounce } from '../hooks/useDebounce';
 import ExpenseTable from './ExpenseTable';
+import { useSearch } from '../hooks/useSearch';
 
 const CATEGORY_LABELS: Record<string, string> = {
   supplies: 'Suministros',
@@ -18,23 +19,16 @@ const CATEGORY_LABELS: Record<string, string> = {
 export default function Expenses() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
-  const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(LIMIT);
 
-  // Estados auxiliares para los filtros aplicados
-  const [appliedSearch, setAppliedSearch] = useState('');
-  const [appliedCategory, setAppliedCategory] = useState('');
-
-  const debouncedSearch = useDebounce(searchTerm);
-
-  // Aplicar filtros y resetear página cuando cambian
-  useEffect(() => {
-    setAppliedSearch(debouncedSearch);
-    setAppliedCategory(categoryFilter);
-    setPage(1); // Resetear a página 1 cuando cambian los filtros
-  }, [debouncedSearch, categoryFilter]);
+  const {
+    searchTerm,
+    setSearchTerm,
+    appliedSearch,
+    page,
+    setPage
+  } = useSearch();
 
   const {
     data: expenses,
@@ -46,8 +40,7 @@ export default function Expenses() {
     page,
     limit,
     filters: {
-      search: appliedSearch,
-      category: appliedCategory === '' ? undefined : appliedCategory
+      search: appliedSearch
     },
     sort: { field: 'date', direction: 'desc' }
   });

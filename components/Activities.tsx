@@ -4,32 +4,21 @@ import ActivityModal from './ActivityModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBicycle } from '@fortawesome/free-solid-svg-icons';
 import { usePaginatedData, LIMIT} from '../hooks/usePaginatedData';
-import { useDebounce } from '../hooks/useDebounce';
+import { useSearch } from '../hooks/useSearch';
 import ActivityTable from './ActivityTable';
 
 export default function Activities() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(LIMIT);
 
-  // Estados auxiliares para los filtros aplicados
-  const [appliedSearch, setAppliedSearch] = useState('');
-
-  const debouncedSearch = useDebounce(searchTerm);
-
-  // Reset page when debounced search changes
-  useEffect(() => {
-    setPage(1);
-  }, [debouncedSearch]);
-
-  // Cuando la página es 1, aplica los filtros al hook
-  useEffect(() => {
-    if (page === 1) {
-      setAppliedSearch(debouncedSearch);
-    }
-  }, [debouncedSearch, page]);
+  const {
+    searchTerm,
+    setSearchTerm,
+    appliedSearch,
+    page,
+    setPage
+  } = useSearch();
 
   const {
     data: activities,

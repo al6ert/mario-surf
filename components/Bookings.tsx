@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase, Booking, Client, Activity, Monitor } from '../lib/supabase';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -7,7 +7,8 @@ import ClientModal from './ClientModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBook } from '@fortawesome/free-solid-svg-icons';
 import BookingTable from './BookingTable';
-import { LIMIT } from '../hooks/usePaginatedData';
+import { LIMIT, usePaginatedData } from '../hooks/usePaginatedData';
+import { useSearch } from '../hooks/useSearch';
 
 export default function Bookings() {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -16,7 +17,6 @@ export default function Bookings() {
   const [monitors, setMonitors] = useState<Monitor[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
   const [editingClientId, setEditingClientId] = useState<number | null>(null);
@@ -27,10 +27,30 @@ export default function Bookings() {
   const [editingDateId, setEditingDateId] = useState<number | null>(null);
   const [tempDate, setTempDate] = useState('');
   const [tempTime, setTempTime] = useState('');
-  const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(LIMIT);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  
+  const {
+    searchTerm,
+    setSearchTerm,
+    appliedSearch,
+    page,
+    setPage
+  } = useSearch();
+
+  const {
+    data: bookingsData,
+    total,
+    loading,
+    error,
+    refresh: refreshTable
+  } = usePaginatedData('Bookings', {
+    page,
+    limit,
+    filters: {
+      search: appliedSearch
+    },
+    sort: { field: 'date', direction: 'desc' }
+  });
 
   // Fetch data from Supabase
   useEffect(() => {
@@ -202,13 +222,8 @@ export default function Bookings() {
   });
 
   // Paginación
-  const total = filteredBookings.length;
   const totalPages = Math.ceil(total / limit);
   const paginatedBookings = filteredBookings.slice((page - 1) * limit, page * limit);
-
-  const refreshTable = () => {
-    // Implement the logic to refresh the table
-  };
 
   const updateBooking = async (id: number, data: any) => {
     try {
@@ -260,7 +275,7 @@ export default function Bookings() {
                 type="text"
                 placeholder="Buscar reservas..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={e => setSearchTerm(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>

@@ -7,18 +7,21 @@ import { faUserSecret } from '@fortawesome/free-solid-svg-icons';
 import { usePaginatedData, LIMIT } from '../hooks/usePaginatedData';
 import { useDebounce } from '../hooks/useDebounce';
 import MonitorTable from './MonitorTable';
+import { useSearch } from '../hooks/useSearch';
 
 export default function Monitors() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMonitor, setSelectedMonitor] = useState<Monitor | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
-  const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(LIMIT);
 
-  // Estados auxiliares para los filtros aplicados
-  const [appliedSearch, setAppliedSearch] = useState('');
-  const [appliedStatus, setAppliedStatus] = useState<'all' | 'active' | 'inactive'>('all');
+  const {
+    searchTerm,
+    setSearchTerm,
+    appliedSearch,
+    page,
+    setPage
+  } = useSearch();
 
   const debouncedSearch = useDebounce(searchTerm);
 
@@ -26,14 +29,6 @@ export default function Monitors() {
   useEffect(() => {
     setPage(1);
   }, [debouncedSearch]);
-
-  // Cuando la página es 1, aplica los filtros al hook
-  useEffect(() => {
-    if (page === 1) {
-      setAppliedSearch(debouncedSearch);
-      setAppliedStatus(statusFilter);
-    }
-  }, [debouncedSearch, statusFilter, page]);
 
   const {
     data: monitors,
@@ -45,8 +40,7 @@ export default function Monitors() {
     page,
     limit,
     filters: {
-      search: appliedSearch,
-      active: appliedStatus === 'all' ? undefined : appliedStatus === 'active'
+      search: appliedSearch
     },
     sort: { field: 'name', direction: 'asc' }
   });
