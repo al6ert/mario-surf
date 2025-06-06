@@ -4,7 +4,7 @@ import InvoiceModal from './InvoiceModal';
 import { updateInvoice, createInvoice } from '../lib/data';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileText } from '@fortawesome/free-solid-svg-icons';
-import { usePaginatedData } from '../hooks/usePaginatedData';
+import { usePaginatedData, LIMIT } from '../hooks/usePaginatedData';
 import { useDebounce } from '../hooks/useDebounce';
 import InvoiceTable from './InvoiceTable';
 
@@ -14,7 +14,7 @@ export default function Invoices() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending' | 'cancelled'>('all');
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(20);
+  const [limit, setLimit] = useState(LIMIT);
 
   // Estados auxiliares para los filtros aplicados
   const [appliedSearch, setAppliedSearch] = useState('');

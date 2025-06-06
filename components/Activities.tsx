@@ -3,7 +3,7 @@ import { supabase, Activity } from '../lib/supabase';
 import ActivityModal from './ActivityModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBicycle } from '@fortawesome/free-solid-svg-icons';
-import { usePaginatedData } from '../hooks/usePaginatedData';
+import { usePaginatedData, LIMIT} from '../hooks/usePaginatedData';
 import { useDebounce } from '../hooks/useDebounce';
 import ActivityTable from './ActivityTable';
 
@@ -12,12 +12,12 @@ export default function Activities() {
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(20);
+  const [limit, setLimit] = useState(LIMIT);
 
   // Estados auxiliares para los filtros aplicados
   const [appliedSearch, setAppliedSearch] = useState('');
 
-  const debouncedSearch = useDebounce(searchTerm, 300);
+  const debouncedSearch = useDebounce(searchTerm);
 
   // Reset page when debounced search changes
   useEffect(() => {

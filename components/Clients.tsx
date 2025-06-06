@@ -4,7 +4,7 @@ import ClientModal from './ClientModal';
 import { DocumentTextIcon } from '@heroicons/react/24/outline';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUsers } from '@fortawesome/free-solid-svg-icons';
-import { usePaginatedData } from '../hooks/usePaginatedData';
+import { usePaginatedData, LIMIT } from '../hooks/usePaginatedData';
 import { useDebounce } from '../hooks/useDebounce';
 import ClientTable from './ClientTable';
 
@@ -13,12 +13,12 @@ export default function Clients() {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(20);
+  const [limit, setLimit] = useState(LIMIT);
 
   // Estados auxiliares para los filtros aplicados
   const [appliedSearch, setAppliedSearch] = useState('');
 
-  const debouncedSearch = useDebounce(searchTerm, 300);
+  const debouncedSearch = useDebounce(searchTerm);
 
   // Reset page when debounced search changes
   useEffect(() => {

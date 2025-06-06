@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEuro } from '@fortawesome/free-solid-svg-icons';
 import PayrollTable from './PayrollTable';
 import { useDebounce } from '../hooks/useDebounce';
-import { usePaginatedData } from '../hooks/usePaginatedData';
+import { usePaginatedData, LIMIT } from '../hooks/usePaginatedData';
 import { createPayroll, updatePayroll, deletePayroll } from '../lib/data';
 import { ApiClient } from '../lib/api';
 
@@ -23,7 +23,7 @@ export default function Payrolls() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending'>('all');
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(20);
+  const [limit, setLimit] = useState(LIMIT);
   const [appliedSearch, setAppliedSearch] = useState('');
   const [appliedStatus, setAppliedStatus] = useState<'all' | 'paid' | 'pending'>('all');
 

@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import type { Client, Activity, Monitor, Booking, Invoice, InvoiceItem, Expense, Payroll, Settings } from './supabase';
+import { LIMIT } from '../hooks/usePaginatedData';
 
 export class ApiError extends Error {
   constructor(message: string, public status?: number) {
@@ -779,7 +780,7 @@ export class ApiClient {
   // Payrolls
   static async getPayrolls({
     page = 1,
-    limit = 20,
+    limit = LIMIT,
     filters,
     sort
   }: {

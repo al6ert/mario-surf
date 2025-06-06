@@ -4,7 +4,7 @@ import MonitorModal from './MonitorModal';
 import { deleteMonitor, updateMonitor, createMonitor } from '../lib/data';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserSecret } from '@fortawesome/free-solid-svg-icons';
-import { usePaginatedData } from '../hooks/usePaginatedData';
+import { usePaginatedData, LIMIT } from '../hooks/usePaginatedData';
 import { useDebounce } from '../hooks/useDebounce';
 import MonitorTable from './MonitorTable';
 
@@ -14,13 +14,13 @@ export default function Monitors() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(20);
+  const [limit, setLimit] = useState(LIMIT);
 
   // Estados auxiliares para los filtros aplicados
   const [appliedSearch, setAppliedSearch] = useState('');
   const [appliedStatus, setAppliedStatus] = useState<'all' | 'active' | 'inactive'>('all');
 
-  const debouncedSearch = useDebounce(searchTerm, 300);
+  const debouncedSearch = useDebounce(searchTerm);
 
   // Reset page when debounced search changes
   useEffect(() => {

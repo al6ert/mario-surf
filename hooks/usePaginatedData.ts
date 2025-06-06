@@ -2,6 +2,8 @@ import { useState, useEffect, useContext } from 'react';
 import { useAppContext } from '../contexts/AppContext';
 import { ApiClient } from '../lib/api';
 
+export const LIMIT = 5;
+
 export interface PaginationOptions {
   page: number;
   limit: number;

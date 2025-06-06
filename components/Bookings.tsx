@@ -7,6 +7,7 @@ import ClientModal from './ClientModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBook } from '@fortawesome/free-solid-svg-icons';
 import BookingTable from './BookingTable';
+import { LIMIT } from '../hooks/usePaginatedData';
 
 export default function Bookings() {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -27,7 +28,7 @@ export default function Bookings() {
   const [tempDate, setTempDate] = useState('');
   const [tempTime, setTempTime] = useState('');
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const [limit, setLimit] = useState(LIMIT);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

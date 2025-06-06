@@ -1,5 +1,6 @@
 import React from 'react';
 import { Expense } from '../lib/supabase';
+import ItemsPerPageSelect from './ItemsPerPageSelect';
 
 const CATEGORY_LABELS: Record<string, string> = {
   supplies: 'Suministros',
@@ -143,16 +144,11 @@ export default function ExpenseTable({
             </p>
           </div>
           <div className="flex items-center gap-2">
-            {/* Dropdown para items por página */}
-            <select
+            <ItemsPerPageSelect
               value={limit}
-              onChange={e => { onPageChange(1); onLimitChange && onLimitChange(Number(e.target.value)); }}
-              className="px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-            >
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
+              onChange={onLimitChange || (() => {})}
+              onPageChange={onPageChange}
+            />
             <nav className="isolate inline-flex -space-x-px rounded-md shadow-xs" aria-label="Pagination">
               <button
                 onClick={() => onPageChange(Math.max(1, page - 1))}

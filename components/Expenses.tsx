@@ -3,7 +3,7 @@ import { supabase, Expense } from '../lib/supabase';
 import ExpenseModal from './ExpenseModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMoneyBill } from '@fortawesome/free-solid-svg-icons';
-import { usePaginatedData } from '../hooks/usePaginatedData';
+import { usePaginatedData, LIMIT } from '../hooks/usePaginatedData';
 import { useDebounce } from '../hooks/useDebounce';
 import ExpenseTable from './ExpenseTable';
 
@@ -21,13 +21,13 @@ export default function Expenses() {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(20);
+  const [limit, setLimit] = useState(LIMIT);
 
   // Estados auxiliares para los filtros aplicados
   const [appliedSearch, setAppliedSearch] = useState('');
   const [appliedCategory, setAppliedCategory] = useState('');
 
-  const debouncedSearch = useDebounce(searchTerm, 300);
+  const debouncedSearch = useDebounce(searchTerm);
 
   // Aplicar filtros y resetear página cuando cambian
   useEffect(() => {
