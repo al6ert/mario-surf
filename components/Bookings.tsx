@@ -6,6 +6,7 @@ import BookingModal from './BookingModal';
 import ClientModal from './ClientModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBook } from '@fortawesome/free-solid-svg-icons';
+import BookingTable from './BookingTable';
 
 export default function Bookings() {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -25,6 +26,10 @@ export default function Bookings() {
   const [editingDateId, setEditingDateId] = useState<number | null>(null);
   const [tempDate, setTempDate] = useState('');
   const [tempTime, setTempTime] = useState('');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch data from Supabase
   useEffect(() => {
@@ -123,12 +128,8 @@ export default function Bookings() {
 
   const handleClientChange = async (bookingId: number, clientId: number) => {
     try {
-      const { error } = await supabase
-        .from('bookings')
-        .update({ client_id: clientId })
-        .eq('id', bookingId);
-      if (error) throw error;
-      setBookings(bookings.map(b => b.id === bookingId ? { ...b, client_id: clientId } : b));
+      await updateBooking(bookingId, { client_id: clientId });
+      refreshTable();
     } catch (error) {
       alert('Error al actualizar el cliente');
     } finally {
@@ -138,31 +139,28 @@ export default function Bookings() {
 
   const handleActivityChange = async (bookingId: number, activityId: number) => {
     try {
-      const { error } = await supabase
-        .from('bookings')
-        .update({ activity_id: activityId })
-        .eq('id', bookingId);
-      if (error) throw error;
-      setBookings(bookings.map(b => b.id === bookingId ? { ...b, activity_id: activityId } : b));
+      await updateBooking(bookingId, { activity_id: activityId });
+      refreshTable();
     } catch (error) {
       alert('Error al actualizar la actividad');
-    } finally {
-      setEditingActivityId(null);
     }
   };
 
   const handleMonitorChange = async (bookingId: number, monitorId: number) => {
     try {
-      const { error } = await supabase
-        .from('bookings')
-        .update({ monitor_id: monitorId })
-        .eq('id', bookingId);
-      if (error) throw error;
-      setBookings(bookings.map(b => b.id === bookingId ? { ...b, monitor_id: monitorId } : b));
+      await updateBooking(bookingId, { monitor_id: monitorId });
+      refreshTable();
     } catch (error) {
       alert('Error al actualizar el monitor');
-    } finally {
-      setEditingMonitorId(null);
+    }
+  };
+
+  const handleDateTimeChange = async (bookingId: number, date: string, time: string) => {
+    try {
+      await updateBooking(bookingId, { date, time });
+      refreshTable();
+    } catch (error) {
+      alert('Error al actualizar la fecha/hora');
     }
   };
 
@@ -186,21 +184,7 @@ export default function Bookings() {
     }
   };
 
-  const handleDateTimeChange = async (bookingId: number, date: string, time: string) => {
-    try {
-      const { error } = await supabase
-        .from('bookings')
-        .update({ date, time })
-        .eq('id', bookingId);
-      if (error) throw error;
-      setBookings(bookings.map(b => b.id === bookingId ? { ...b, date, time } : b));
-    } catch (error) {
-      alert('Error al actualizar la fecha/hora');
-    } finally {
-      setEditingDateId(null);
-    }
-  };
-
+  // Filtrar bookings según búsqueda y estado
   const filteredBookings = bookings.filter(booking => {
     const client = clients.find(c => c.id === booking.client_id);
     const activity = activities.find(a => a.id === booking.activity_id);
@@ -209,14 +193,37 @@ export default function Bookings() {
     const matchesSearch = searchTerm === '' || 
       (client?.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (activity?.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (monitor?.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      booking.date.includes(searchTerm) ||
-      booking.time.includes(searchTerm);
+      (monitor?.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
     const matchesStatus = statusFilter === 'all' || booking.status === statusFilter;
 
     return matchesSearch && matchesStatus;
   });
+
+  // Paginación
+  const total = filteredBookings.length;
+  const totalPages = Math.ceil(total / limit);
+  const paginatedBookings = filteredBookings.slice((page - 1) * limit, page * limit);
+
+  const refreshTable = () => {
+    // Implement the logic to refresh the table
+  };
+
+  const updateBooking = async (id: number, data: any) => {
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .update(data)
+        .eq('id', id);
+      if (error) throw error;
+      setBookings(bookings.map(booking => 
+        booking.id === id ? { ...booking, ...data } : booking
+      ));
+    } catch (error) {
+      console.error('Error updating booking:', error);
+      alert('Error al actualizar la reserva');
+    }
+  };
 
   if (isLoading) {
     return (
@@ -269,161 +276,29 @@ export default function Bookings() {
           </div>
 
           <div className="w-full">
-            <table className="w-full min-w-0 divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">ID</th>
-                  <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Cliente</th>
-                  <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Actividad</th>
-                  <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Fecha/Hora</th>
-                  <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Monitor</th>
-                  <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Estado</th>
-                  <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredBookings.map((booking) => {
-                  const client = clients.find(c => c.id === booking.client_id);
-                  const activity = activities.find(a => a.id === booking.activity_id);
-                  const monitor = monitors.find(m => m.id === booking.monitor_id);
-
-                  return (
-                    <tr key={booking.id} className="hover:bg-gray-50">
-                      <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-500">{booking.id}</td>
-                      <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900 max-w-[120px] truncate cursor-pointer hover:bg-blue-50"
-                        onClick={() => setEditingClientId(booking.id)}
-                      >
-                        {editingClientId === booking.id ? (
-                          <select
-                            className="w-full h-full bg-transparent border-none text-sm truncate focus:outline-none"
-                            value={booking.client_id}
-                            autoFocus
-                            onBlur={() => setEditingClientId(null)}
-                            onChange={async (e) => {
-                              if (e.target.value === 'new') {
-                                setShowNewClientModal(true);
-                              } else {
-                                await handleClientChange(booking.id, Number(e.target.value));
-                              }
-                            }}
-                          >
-                            <option value="new">+ Nuevo cliente</option>
-                            {clients.map((client) => (
-                              <option key={client.id} value={client.id}>{client.name}</option>
-                            ))}
-                          </select>
-                        ) : (
-                          client?.name || 'N/A'
-                        )}
-                      </td>
-                      <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900 max-w-[120px] truncate cursor-pointer hover:bg-blue-50"
-                        onClick={() => setEditingActivityId(booking.id)}
-                      >
-                        {editingActivityId === booking.id ? (
-                          <select
-                            className="w-full h-full bg-transparent border-none text-sm truncate focus:outline-none"
-                            value={booking.activity_id}
-                            autoFocus
-                            onBlur={() => setEditingActivityId(null)}
-                            onChange={async (e) => {
-                              await handleActivityChange(booking.id, Number(e.target.value));
-                            }}
-                          >
-                            {activities.map((activity) => (
-                              <option key={activity.id} value={activity.id}>{activity.name}</option>
-                            ))}
-                          </select>
-                        ) : (
-                          activity?.name || 'N/A'
-                        )}
-                      </td>
-                      <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900 max-w-[140px] truncate cursor-pointer hover:bg-blue-50"
-                        onClick={() => {
-                          setEditingDateId(booking.id);
-                          setTempDate(booking.date);
-                          setTempTime(booking.time);
-                        }}
-                      >
-                        {editingDateId === booking.id ? (
-                          <div className="flex gap-1 items-center w-full">
-                            <input
-                              type="date"
-                              className="w-[110px] h-full bg-transparent border-none text-sm truncate focus:outline-none"
-                              value={tempDate}
-                              onChange={e => setTempDate(e.target.value)}
-                              onBlur={() => handleDateTimeChange(booking.id, tempDate, tempTime)}
-                            />
-                            <input
-                              type="time"
-                              step="900"
-                              className="w-[70px] h-full bg-transparent border-none text-sm truncate focus:outline-none"
-                              value={tempTime}
-                              onChange={e => setTempTime(e.target.value)}
-                              onBlur={() => handleDateTimeChange(booking.id, tempDate, tempTime)}
-                            />
-                          </div>
-                        ) : (
-                          format(new Date(`${booking.date}T${booking.time}`), 'dd/MM/yyyy HH:mm')
-                        )}
-                      </td>
-                      <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900 max-w-[120px] truncate cursor-pointer hover:bg-blue-50"
-                        onClick={() => setEditingMonitorId(booking.id)}
-                      >
-                        {editingMonitorId === booking.id ? (
-                          <select
-                            className="w-full h-full bg-transparent border-none text-sm truncate focus:outline-none"
-                            value={booking.monitor_id}
-                            autoFocus
-                            onBlur={() => setEditingMonitorId(null)}
-                            onChange={async (e) => {
-                              await handleMonitorChange(booking.id, Number(e.target.value));
-                            }}
-                          >
-                            {monitors.map((monitor) => (
-                              <option key={monitor.id} value={monitor.id}>{monitor.name}</option>
-                            ))}
-                          </select>
-                        ) : (
-                          monitor?.name || 'N/A'
-                        )}
-                      </td>
-                      <td className="px-2 py-4 whitespace-nowrap">
-                        <select
-                          value={booking.status}
-                          onChange={(e) => handleStatusChange(booking.id, e.target.value as 'confirmed' | 'pending' | 'cancelled')}
-                          className={
-                            booking.status === 'confirmed'
-                              ? 'bg-green-100 text-green-800 px-2 py-1 rounded font-semibold text-xs'
-                              : booking.status === 'pending'
-                              ? 'bg-yellow-100 text-yellow-800 px-2 py-1 rounded font-semibold text-xs'
-                              : 'bg-red-100 text-red-800 px-2 py-1 rounded font-semibold text-xs'
-                          }
-                          style={{ minWidth: 110 }}
-                        >
-                          <option value="confirmed">Confirmada</option>
-                          <option value="pending">Pendiente</option>
-                          <option value="cancelled">Cancelada</option>
-                        </select>
-                      </td>
-                      <td className="px-2 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => handleEditBooking(booking)}
-                          className="text-blue-600 hover:text-blue-900 mr-3"
-                        >
-                          Editar
-                        </button>
-                        <button
-                          onClick={() => handleDeleteBooking(booking.id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          Eliminar
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <BookingTable
+              bookings={paginatedBookings}
+              clients={clients}
+              activities={activities}
+              monitors={monitors}
+              total={total}
+              page={page}
+              limit={limit}
+              onPageChange={setPage}
+              onEdit={handleEditBooking}
+              onDelete={handleDeleteBooking}
+              onStatusChange={handleStatusChange}
+              loading={loading}
+              error={error}
+              onLimitChange={setLimit}
+              setEditingClientId={setEditingClientId}
+              editingClientId={editingClientId}
+              setShowNewClientModal={setShowNewClientModal}
+              onClientChange={handleClientChange}
+              onActivityChange={handleActivityChange}
+              onMonitorChange={handleMonitorChange}
+              onDateTimeChange={handleDateTimeChange}
+            />
           </div>
         </div>
 

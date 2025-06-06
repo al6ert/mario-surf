@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Booking, Client, Activity, Monitor } from '../lib/supabase';
+import { Combobox } from '@headlessui/react';
+import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid';
 
 interface BookingModalProps {
   booking: Booking | null;
@@ -27,6 +29,12 @@ export default function BookingModal({
     status: 'pending',
     notes: '',
   });
+  const [clientQuery, setClientQuery] = useState('');
+  const filteredClients = clientQuery === ''
+    ? clients
+    : clients.filter(client =>
+        client.name.toLowerCase().includes(clientQuery.toLowerCase())
+      );
 
   useEffect(() => {
     if (booking) {
@@ -51,7 +59,7 @@ export default function BookingModal({
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    if (name === 'client_id' || name === 'activity_id' || name === 'monitor_id') {
+    if (name === 'activity_id' || name === 'monitor_id') {
       setFormData((prev) => ({ ...prev, [name]: parseInt(value) || 0 }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
@@ -87,20 +95,45 @@ export default function BookingModal({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Cliente
               </label>
-              <select
-                name="client_id"
-                value={formData.client_id || ''}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Seleccionar cliente</option>
-                {clients.map((client) => (
-                  <option key={client.id} value={client.id}>
-                    {client.name}
-                  </option>
-                ))}
-              </select>
+              <Combobox value={clients.find(c => c.id === formData.client_id) || null} onChange={client => setFormData({ ...formData, client_id: client?.id || 0 })}>
+                <div className="relative">
+                  <Combobox.Input
+                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
+                    displayValue={(client: Client | null) => client ? client.name : ''}
+                    onChange={e => setClientQuery(e.target.value)}
+                    placeholder="Seleccionar cliente"
+                    id="client"
+                    required
+                  />
+                  <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
+                    <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                  </Combobox.Button>
+                  {filteredClients.length > 0 && (
+                    <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                      {filteredClients.map(client => (
+                        <Combobox.Option
+                          key={client.id}
+                          value={client}
+                          className={({ active }) =>
+                            `relative cursor-default select-none py-2 pl-10 pr-4 ${active ? 'bg-blue-600 text-white' : 'text-gray-900'}`
+                          }
+                        >
+                          {({ selected, active }) => (
+                            <>
+                              <span className={`block truncate ${selected ? 'font-semibold' : 'font-normal'}`}>{client.name}</span>
+                              {selected ? (
+                                <span className={`absolute inset-y-0 left-0 flex items-center pl-3 ${active ? 'text-white' : 'text-blue-600'}`}>
+                                  <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                                </span>
+                              ) : null}
+                            </>
+                          )}
+                        </Combobox.Option>
+                      ))}
+                    </Combobox.Options>
+                  )}
+                </div>
+              </Combobox>
             </div>
 
             <div>

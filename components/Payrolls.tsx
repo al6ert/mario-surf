@@ -27,7 +27,7 @@ export default function Payrolls() {
   const [appliedSearch, setAppliedSearch] = useState('');
   const [appliedStatus, setAppliedStatus] = useState<'all' | 'paid' | 'pending'>('all');
 
-  const debouncedSearch = useDebounce(searchTerm, 300);
+  const debouncedSearch = useDebounce(searchTerm);
 
   useEffect(() => {
     console.log('Current monitors:', monitors);

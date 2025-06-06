@@ -20,7 +20,7 @@ export default function Invoices() {
   const [appliedSearch, setAppliedSearch] = useState('');
   const [appliedStatus, setAppliedStatus] = useState<'all' | 'paid' | 'pending' | 'cancelled'>('all');
 
-  const debouncedSearch = useDebounce(searchTerm, 300);
+  const debouncedSearch = useDebounce(searchTerm);
 
   // Cuando la página es 1, aplica los filtros al hook
   useEffect(() => {
