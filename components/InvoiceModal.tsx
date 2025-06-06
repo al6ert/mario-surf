@@ -300,8 +300,7 @@ export default function InvoiceModal({ invoice, onClose, onSave }: InvoiceModalP
                   {/* Mostrar info del cliente seleccionado */}
                   {formData.client_id !== 0 && (
                     <div className="mt-6 p-4 bg-gray-50 rounded border border-gray-200 flex flex-col md:flex-row md:items-start md:justify-between gap-4 w-full">
-                      <div>
-                        <div className="text-sm text-gray-700 font-semibold">Cliente seleccionado:</div>
+                      <div>                        
                         <div className="text-base text-gray-900 font-bold">{clients.find(c => c.id === formData.client_id)?.name || ''}</div>
                         <div className="text-sm text-gray-600">{clients.find(c => c.id === formData.client_id)?.address || ''}</div>
                       </div>
