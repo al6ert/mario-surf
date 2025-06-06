@@ -1,7 +1,12 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBook, faBicycle, faUserSecret, faMoneyBill, faUsers, faCalendar, faChartLine } from '@fortawesome/free-solid-svg-icons';
-import type { Client, Activity, Monitor, Booking, Invoice, Settings } from '../lib/supabase';
+import { faChartLine } from '@fortawesome/free-solid-svg-icons';
+import type { Client, Activity, Monitor, Booking, Invoice, Expense, Payroll, Settings } from '../lib/supabase';
+import DashboardMetrics from './dashboard/DashboardMetrics';
+import TodayBookings from './dashboard/TodayBookings';
+import UpcomingBookings from './dashboard/UpcomingBookings';
+import UnpaidInvoices from './dashboard/UnpaidInvoices';
+import MonitorHours from './dashboard/MonitorHours';
 
 interface DashboardProps {
   bookings: Booking[];
@@ -9,10 +14,21 @@ interface DashboardProps {
   monitors: Monitor[];
   clients: Client[];
   invoices: Invoice[];
+  expenses: Expense[];
+  payrolls: Payroll[];
   settings: Settings;
 }
 
-export default function Dashboard({ bookings, activities, monitors, clients, invoices, settings }: DashboardProps) {
+export default function Dashboard({ 
+  bookings, 
+  activities, 
+  monitors, 
+  clients, 
+  invoices,
+  expenses,
+  payrolls,
+  settings 
+}: DashboardProps) {
   return (
     <div className="flex justify-center w-full">
       <div className="w-full px-2 md:px-6">
@@ -22,38 +38,53 @@ export default function Dashboard({ bookings, activities, monitors, clients, inv
             Dashboard
           </h1>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6 flex flex-col items-center">
-            <h3 className="text-lg font-semibold flex items-center gap-2 mb-2"><FontAwesomeIcon icon={faBook} /> Reservas Programadas</h3>
-            <span className="text-3xl font-bold text-slate-800">{bookings.length}</span>
+
+        {/* Financial Metrics Block */}
+        <DashboardMetrics 
+          invoices={invoices}
+          expenses={expenses}
+          payrolls={payrolls}
+          settings={settings}
+        />
+
+        {/* Bookings Block */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-700 mb-4">Reservas de Hoy</h3>
+            <TodayBookings
+              bookings={bookings}
+              clients={clients}
+              activities={activities}
+              monitors={monitors}
+            />
           </div>
-          <div className="bg-white rounded-lg shadow p-6 flex flex-col items-center">
-            <h3 className="text-lg font-semibold flex items-center gap-2 mb-2"><FontAwesomeIcon icon={faBicycle} /> Actividades Disponibles</h3>
-            <span className="text-3xl font-bold text-slate-800">{activities.length}</span>
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-700 mb-4">Próximas Reservas</h3>
+            <UpcomingBookings
+              bookings={bookings}
+              clients={clients}
+              activities={activities}
+              monitors={monitors}
+            />
           </div>
-          <div className="bg-white rounded-lg shadow p-6 flex flex-col items-center">
-            <h3 className="text-lg font-semibold flex items-center gap-2 mb-2"><FontAwesomeIcon icon={faUserSecret} /> Monitores Disponibles</h3>
-            <span className="text-3xl font-bold text-slate-800">{monitors.filter(m => m.active).length}</span>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6 flex flex-col items-center">
-            <h3 className="text-lg font-semibold flex items-center gap-2 mb-2"><FontAwesomeIcon icon={faMoneyBill} /> Pendientes de Cobro</h3>
-            <span className="text-3xl font-bold text-slate-800">
-              {invoices.filter(invoice => invoice.status === 'pending').reduce((sum, invoice) => {
-                const subtotal = invoice.items.reduce((itemSum, item) => itemSum + (item.quantity * item.price), 0);
-                const ivaPercentage = settings.iva_percentage || 21;
-                const tax = subtotal * (ivaPercentage / 100);
-                return sum + subtotal + tax;
-              }, 0).toFixed(2)} €
-            </span>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6 flex flex-col items-center">
-            <h3 className="text-lg font-semibold flex items-center gap-2 mb-2"><FontAwesomeIcon icon={faUsers} /> Clientes Registrados</h3>
-            <span className="text-3xl font-bold text-slate-800">{clients.length}</span>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6 flex flex-col items-center">
-            <h3 className="text-lg font-semibold flex items-center gap-2 mb-2"><FontAwesomeIcon icon={faCalendar} /> Reservas de Hoy</h3>
-            <span className="text-3xl font-bold text-slate-800">{bookings.filter(booking => new Date(booking.date).toDateString() === new Date().toDateString()).length}</span>
-          </div>
+        </div>
+
+        {/* Unpaid Invoices Block */}
+        <div className="bg-white rounded-lg shadow p-6 mb-8">
+          <h3 className="text-lg font-semibold text-gray-700 mb-4">Facturas Pendientes</h3>
+          <UnpaidInvoices
+            invoices={invoices}
+            clients={clients}
+          />
+        </div>
+
+        {/* Monitor Hours Block */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-semibold text-gray-700 mb-4">Horas de Monitores (últimos 30 días)</h3>
+          <MonitorHours
+            monitors={monitors}
+            bookings={bookings}            
+          />
         </div>
       </div>
     </div>

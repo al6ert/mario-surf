@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../contexts/AppContext';
 import { createClient, updateClient, createActivity, updateActivity, createMonitor, updateMonitor, createBooking, updateBooking, createInvoice, updateInvoice } from '../lib/data';
-import type { Client, Activity, Monitor, Booking, Invoice, InvoiceItem, Settings } from '../lib/supabase';
+import type { Client, Activity, Monitor, Booking, Invoice, InvoiceItem, Settings, Expense, Payroll } from '../lib/supabase';
 import Calendar from './Calendar';
 import Bookings from './Bookings';
 import Activities from './Activities';
@@ -159,6 +159,8 @@ function AppContent() {
             monitors={state.monitors}
             clients={state.clients}
             invoices={state.invoices}
+            expenses={state.expenses}
+            payrolls={state.payrolls}
             settings={state.settings}
           />
         )}
