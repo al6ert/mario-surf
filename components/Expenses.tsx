@@ -6,7 +6,7 @@ import { faMoneyBill } from '@fortawesome/free-solid-svg-icons';
 import { usePaginatedData, LIMIT } from '../hooks/usePaginatedData';
 import { useDebounce } from '../hooks/useDebounce';
 import ExpenseTable from './ExpenseTable';
-import { useSearch } from '../hooks/useSearch';
+import { useSearchAndFilters } from '../hooks/useSearchAndFilters';
 
 const CATEGORY_LABELS: Record<string, string> = {
   supplies: 'Suministros',
@@ -19,16 +19,18 @@ const CATEGORY_LABELS: Record<string, string> = {
 export default function Expenses() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
-  const [categoryFilter, setCategoryFilter] = useState('');
   const [limit, setLimit] = useState(LIMIT);
 
   const {
     searchTerm,
     setSearchTerm,
     appliedSearch,
+    filter: categoryFilter,
+    setFilter: setCategoryFilter,
+    appliedFilter: appliedCategory,
     page,
     setPage
-  } = useSearch();
+  } = useSearchAndFilters<string>('');
 
   const {
     data: expenses,
@@ -40,7 +42,8 @@ export default function Expenses() {
     page,
     limit,
     filters: {
-      search: appliedSearch
+      search: appliedSearch,
+      category: appliedCategory === '' ? undefined : appliedCategory
     },
     sort: { field: 'date', direction: 'desc' }
   });
@@ -118,14 +121,14 @@ export default function Expenses() {
               <select
                 value={categoryFilter}
                 onChange={e => setCategoryFilter(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Todas las categorías</option>
-                <option value="supplies">Suministros</option>
-                <option value="equipment">Equipamiento</option>
-                <option value="salaries">Salarios</option>
-                <option value="maintenance">Mantenimiento</option>
-                <option value="other">Otros</option>
+                {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
               </select>
             </div>
           </div>

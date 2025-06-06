@@ -5,11 +5,10 @@ import PayrollModal from './PayrollModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEuro } from '@fortawesome/free-solid-svg-icons';
 import PayrollTable from './PayrollTable';
-import { useDebounce } from '../hooks/useDebounce';
-import { usePaginatedData, LIMIT } from '../hooks/usePaginatedData';
+import { LIMIT, usePaginatedData } from '../hooks/usePaginatedData';
+import { useSearchAndFilters } from '../hooks/useSearchAndFilters';
 import { createPayroll, updatePayroll, deletePayroll } from '../lib/data';
 import { ApiClient } from '../lib/api';
-import { useSearch } from '../hooks/useSearch';
 
 const MONTHS = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -27,15 +26,19 @@ export default function Payrolls() {
     searchTerm,
     setSearchTerm,
     appliedSearch,
+    filter: statusFilter,
+    setFilter: setStatusFilter,
+    appliedFilter: appliedStatus,
     page,
     setPage
-  } = useSearch();
+  } = useSearchAndFilters<'all' | 'paid' | 'pending'>('all');
 
   const { data: payrolls, total, loading, error, refresh: refreshTable } = usePaginatedData('Payrolls', {
     page,
     limit,
     filters: {
-      search: appliedSearch
+      search: appliedSearch,
+      status: appliedStatus === 'all' ? undefined : appliedStatus
     },
     sort: { field: 'date', direction: 'desc' }
   });
@@ -126,6 +129,17 @@ export default function Payrolls() {
               onChange={e => setSearchTerm(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
+          </div>
+          <div>
+            <select
+              value={statusFilter}
+              onChange={e => setStatusFilter(e.target.value as 'all' | 'paid' | 'pending')}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">Todos los estados</option>
+              <option value="paid">Pagadas</option>
+              <option value="pending">Pendientes</option>
+            </select>
           </div>
         </div>
         <PayrollTable

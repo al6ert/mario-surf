@@ -7,28 +7,23 @@ import { faUserSecret } from '@fortawesome/free-solid-svg-icons';
 import { usePaginatedData, LIMIT } from '../hooks/usePaginatedData';
 import { useDebounce } from '../hooks/useDebounce';
 import MonitorTable from './MonitorTable';
-import { useSearch } from '../hooks/useSearch';
+import { useSearchAndFilters } from '../hooks/useSearchAndFilters';
 
 export default function Monitors() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMonitor, setSelectedMonitor] = useState<Monitor | null>(null);
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [limit, setLimit] = useState(LIMIT);
 
   const {
     searchTerm,
     setSearchTerm,
     appliedSearch,
+    filter: statusFilter,
+    setFilter: setStatusFilter,
+    appliedFilter: appliedStatus,
     page,
     setPage
-  } = useSearch();
-
-  const debouncedSearch = useDebounce(searchTerm);
-
-  // Reset page when debounced search changes
-  useEffect(() => {
-    setPage(1);
-  }, [debouncedSearch]);
+  } = useSearchAndFilters<'all' | 'active' | 'inactive'>('all');
 
   const {
     data: monitors,
@@ -40,7 +35,8 @@ export default function Monitors() {
     page,
     limit,
     filters: {
-      search: appliedSearch
+      search: appliedSearch,
+      active: appliedStatus === 'all' ? undefined : appliedStatus === 'active'
     },
     sort: { field: 'name', direction: 'asc' }
   });
@@ -125,7 +121,7 @@ export default function Monitors() {
                 onChange={e => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="all">Todos</option>
+                <option value="all">Todos los estados</option>
                 <option value="active">Activos</option>
                 <option value="inactive">Inactivos</option>
               </select>

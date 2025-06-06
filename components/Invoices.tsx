@@ -7,21 +7,23 @@ import { faFileText } from '@fortawesome/free-solid-svg-icons';
 import { usePaginatedData, LIMIT } from '../hooks/usePaginatedData';
 import { useDebounce } from '../hooks/useDebounce';
 import InvoiceTable from './InvoiceTable';
-import { useSearch } from '../hooks/useSearch';
+import { useSearchAndFilters } from '../hooks/useSearchAndFilters';
 
 export default function Invoices() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
-  const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending' | 'cancelled'>('all');
   const [limit, setLimit] = useState(LIMIT);
 
   const {
     searchTerm,
     setSearchTerm,
     appliedSearch,
+    filter: statusFilter,
+    setFilter: setStatusFilter,
+    appliedFilter: appliedStatus,
     page,
     setPage
-  } = useSearch();
+  } = useSearchAndFilters<'all' | 'paid' | 'pending' | 'cancelled'>('all');
 
   const {
     data: invoices,
@@ -33,7 +35,8 @@ export default function Invoices() {
     page,
     limit,
     filters: {
-      search: appliedSearch
+      search: appliedSearch,
+      status: appliedStatus === 'all' ? undefined : appliedStatus
     },
     sort: { field: 'date', direction: 'desc' }
   });
@@ -109,7 +112,7 @@ export default function Invoices() {
                 onChange={e => setStatusFilter(e.target.value as 'all' | 'paid' | 'pending' | 'cancelled')}
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="all">Todas</option>
+                <option value="all">Todos los estados</option>
                 <option value="paid">Pagadas</option>
                 <option value="pending">Pendientes</option>
                 <option value="cancelled">Canceladas</option>
