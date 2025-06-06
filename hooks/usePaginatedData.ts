@@ -46,7 +46,13 @@ export function usePaginatedData(
   // Actualizar cuando cambien las opciones
   useEffect(() => {
     fetchData();
-  }, [options.page, options.limit, options.filters?.search, options.filters?.status, options.sort?.field, options.sort?.direction]);
+  }, [
+    options.page, 
+    options.limit, 
+    JSON.stringify(options.filters),
+    options.sort?.field, 
+    options.sort?.direction
+  ]);
 
   return {
     data,
