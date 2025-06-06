@@ -4,6 +4,7 @@ import { ApiClient } from '../lib/api';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCalendar } from '@fortawesome/free-solid-svg-icons';
 import CalendarBookingCard from './CalendarBookingCard';
+import { supabase } from '../lib/supabase';
 
 interface CalendarProps {
   bookings: Booking[];
@@ -232,6 +233,36 @@ export default function Calendar({ bookings: initialBookings, clients: initialCl
               monitors={monitors}
               selectedDate={selectedDate}
               onClose={() => setSelectedDate(null)}
+              onSave={async (bookingData) => {
+                try {
+                  if (bookingData.id) {
+                    // Update existing booking
+                    const { error } = await supabase
+                      .from('bookings')
+                      .update(bookingData)
+                      .eq('id', bookingData.id);
+
+                    if (error) throw error;
+
+                    setBookings(bookings.map(booking =>
+                      booking.id === bookingData.id ? { ...booking, ...bookingData } : booking
+                    ));
+                  } else {
+                    // Create new booking
+                    const { data, error } = await supabase
+                      .from('bookings')
+                      .insert([bookingData])
+                      .select();
+
+                    if (error) throw error;
+
+                    setBookings([...bookings, data[0]]);
+                  }
+                } catch (error) {
+                  console.error('Error saving booking:', error);
+                  alert('Error al guardar la reserva');
+                }
+              }}
             />
           )}
         </div>

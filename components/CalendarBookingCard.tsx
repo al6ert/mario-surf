@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { Booking, Client, Activity, Monitor } from '../lib/supabase';
+import BookingModal from './BookingModal';
 
 interface CalendarBookingCardProps {
   bookings: Booking[];
@@ -8,6 +9,7 @@ interface CalendarBookingCardProps {
   monitors: Monitor[];
   selectedDate: string;
   onClose: () => void;
+  onSave: (bookingData: Partial<Booking>) => void;
 }
 
 export default function CalendarBookingCard({
@@ -17,7 +19,11 @@ export default function CalendarBookingCard({
   monitors,
   selectedDate,
   onClose,
+  onSave,
 }: CalendarBookingCardProps) {
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   if (!bookings || !Array.isArray(bookings)) {
     return (
       <div className="mt-4 bg-white rounded-lg shadow">
@@ -31,6 +37,11 @@ export default function CalendarBookingCard({
   const filteredBookings = bookings
     .filter(b => b.date === selectedDate && b.status !== 'cancelled')
     .sort((a, b) => a.time.localeCompare(b.time));
+
+  const handleBookingClick = (booking: Booking) => {
+    setSelectedBooking(booking);
+    setIsModalOpen(true);
+  };
 
   return (
     <div className="mt-4 bg-white rounded-lg shadow">
@@ -73,7 +84,11 @@ export default function CalendarBookingCard({
             }
 
             return (
-              <div key={booking.id} className="border-b border-gray-200 last:border-b-0 pb-4 last:pb-0">
+              <div 
+                key={booking.id} 
+                className="border-b border-gray-200 last:border-b-0 pb-4 last:pb-0 cursor-pointer hover:bg-gray-50"
+                onClick={() => handleBookingClick(booking)}
+              >
                 <div className="flex flex-col space-y-2">
                   {/* First row: Sport, Monitor and Time */}
                   <div className="flex items-center justify-between">
@@ -113,6 +128,27 @@ export default function CalendarBookingCard({
           )}
         </div>
       </div>
+
+      {isModalOpen && selectedBooking && (
+        <BookingModal
+          booking={selectedBooking}
+          clients={clients}
+          activities={activities}
+          monitors={monitors}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedBooking(null);
+          }}
+          onSave={(bookingData) => {
+            onSave({
+              ...bookingData,
+              id: selectedBooking.id // Ensure we keep the original booking ID
+            });
+            setIsModalOpen(false);
+            setSelectedBooking(null);
+          }}
+        />
+      )}
     </div>
   );
 } 
