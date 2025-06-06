@@ -296,12 +296,22 @@ export default function InvoiceModal({ invoice, onClose, onSave }: InvoiceModalP
                   </div>
                 </div>
 
-                <div className="mt-6 flex items-center justify-between border-t border-gray-200 pt-6">
-                  <div className="text-right">
-                    <div className="text-sm text-gray-600">Subtotal: {getSubtotal().toFixed(2)} €</div>
-                    <div className="text-sm text-gray-600">IVA ({formData.iva_percentage}%): {getIVA().toFixed(2)} €</div>
-                    <div className="text-lg font-semibold text-gray-900">Total: {getTotal().toFixed(2)} €</div>
-                  </div>
+                <div className="mt-6 flex items-center justify-between border-t border-gray-200 gap-4">
+                  {/* Mostrar info del cliente seleccionado */}
+                  {formData.client_id !== 0 && (
+                    <div className="mt-6 p-4 bg-gray-50 rounded border border-gray-200 flex flex-col md:flex-row md:items-start md:justify-between gap-4 w-full">
+                      <div>
+                        <div className="text-sm text-gray-700 font-semibold">Cliente seleccionado:</div>
+                        <div className="text-base text-gray-900 font-bold">{clients.find(c => c.id === formData.client_id)?.name || ''}</div>
+                        <div className="text-sm text-gray-600">{clients.find(c => c.id === formData.client_id)?.address || ''}</div>
+                      </div>
+                      <div className="text-right md:min-w-[180px]">
+                        <div className="text-sm text-gray-600">Subtotal: {getSubtotal().toFixed(2)} €</div>
+                        <div className="text-sm text-gray-600">IVA ({formData.iva_percentage}%): {getIVA().toFixed(2)} €</div>
+                        <div className="text-lg font-semibold text-gray-900">Total: {getTotal().toFixed(2)} €</div>
+                      </div>
+                    </div>
+                  )}
                   <div className="flex gap-3">
                     <button
                       type="button"
@@ -319,6 +329,7 @@ export default function InvoiceModal({ invoice, onClose, onSave }: InvoiceModalP
                   </div>
                 </div>
               </form>
+              
             </div>
           </div>
         </div>
