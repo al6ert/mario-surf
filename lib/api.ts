@@ -232,20 +232,14 @@ export class ApiClient {
     try {
       const { data, error } = await supabase
         .from('bookings')
-        .select(`
-          *,
-          client:clients(*),
-          activity:activities(*),
-          monitor:monitors(*)
-        `)
+        .select('*', { count: 'exact' })
         .order('date', { ascending: false });
       
       if (error) throw error;
-      return data as (Booking & {
-        client: Client;
-        activity: Activity;
-        monitor: Monitor;
-      })[];
+      return {
+        data: data as Booking[],
+        count: data?.length || 0
+      };
     } catch (error) {
       return this.handleError(error);
     }

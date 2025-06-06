@@ -86,7 +86,7 @@ export async function loadData(): Promise<AppState> {
       clients: (clients as { data: Client[] })?.data || [],
       activities: (activities as { data: Activity[] })?.data || [],
       monitors: (monitors as { data: Monitor[] })?.data || [],
-      bookings: bookings || [],
+      bookings: (bookings as { data: Booking[] })?.data || [],
       invoices: (invoices as { data: Invoice[] })?.data || [],
       expenses: (expenses as { data: Expense[] })?.data || [],
       payrolls: (payrolls as { data: Payroll[] })?.data || [],
