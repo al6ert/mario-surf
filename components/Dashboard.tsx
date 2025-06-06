@@ -30,6 +30,13 @@ export default function Dashboard({
   payrolls,
   settings 
 }: DashboardProps) {
+  const currentDate = new Date().toLocaleDateString('es-ES', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
   return (
     <div className="flex justify-center w-full">
       <div className="w-full px-2 md:px-6">
@@ -38,6 +45,9 @@ export default function Dashboard({
             <FontAwesomeIcon icon={faChartLine} className="w-7 h-7 text-gray-700" />
             Dashboard
           </h1>
+          <div className="text-lg text-gray-600">
+            {currentDate}
+          </div>
         </div>
 
         {/* Financial Metrics Block */}
