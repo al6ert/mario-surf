@@ -83,9 +83,8 @@ export default function InvoiceTable({
         <table className="w-full min-w-0 divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Nº Factura</th>
-              <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Cliente</th>
               <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Fecha</th>
+              <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Cliente</th>
               <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Importe</th>
               <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Estado</th>
               <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Acciones</th>
@@ -94,9 +93,8 @@ export default function InvoiceTable({
           <tbody className="bg-white divide-y divide-gray-200">
             {invoices.map(invoice => (
               <tr key={invoice.id} className="hover:bg-gray-50">
-                <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{invoice.number}</td>
-                <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{invoice.clients?.name}</td>
                 <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{invoice.date ? new Date(invoice.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : ''}</td>
+                <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{invoice.clients?.name}</td>
                 <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{getTotal(invoice)} €</td>
                 <td className="px-2 py-4 whitespace-nowrap text-sm">
                   <select
