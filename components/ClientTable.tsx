@@ -27,22 +27,6 @@ export default function ClientTable({
   error,
   onLimitChange
 }: ClientTableProps) {
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <div className="text-red-500 text-lg font-semibold">{error}</div>
-      </div>
-    );
-  }
-
   // Paginación
   const totalPages = Math.ceil(total / limit);
   const start = (page - 1) * limit + 1;
@@ -63,6 +47,14 @@ export default function ClientTable({
     return pages;
   };
 
+  if (error) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="text-red-500 text-lg font-semibold">{error}</div>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="w-full">
@@ -78,23 +70,39 @@ export default function ClientTable({
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {clients.map(client => (
-              <tr key={client.id} className="hover:bg-gray-50">
-                <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900 max-w-[160px] truncate">{client.name}</td>
-                <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{client.email}</td>
-                <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{client.phone}</td>
-                <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{client.dni}</td>
-                <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{client.address}</td>
-                <td className="px-2 py-4 whitespace-nowrap text-sm font-medium">
-                  <button onClick={() => onEdit(client)} className="text-blue-600 hover:text-blue-900 mr-3">Editar</button>
-                  <button onClick={() => onDelete(client.id)} className="text-red-600 hover:text-red-900">Eliminar</button>
+            {loading ? (
+              <tr>
+                <td colSpan={6} className="px-2 py-4">
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                  </div>
                 </td>
               </tr>
-            ))}
+            ) : clients.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-2 py-4 text-center text-gray-500">
+                  No hay clientes disponibles
+                </td>
+              </tr>
+            ) : (
+              clients.map(client => (
+                <tr key={client.id} className="hover:bg-gray-50">
+                  <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900 max-w-[160px] truncate">{client.name}</td>
+                  <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{client.email}</td>
+                  <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{client.phone}</td>
+                  <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{client.dni}</td>
+                  <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{client.address}</td>
+                  <td className="px-2 py-4 whitespace-nowrap text-sm font-medium">
+                    <button onClick={() => onEdit(client)} className="text-blue-600 hover:text-blue-900 mr-3">Editar</button>
+                    <button onClick={() => onDelete(client.id)} className="text-red-600 hover:text-red-900">Eliminar</button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
-      {/* Paginación */}
+      {/* Paginación Tailwind v4 */}
       <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
         <div className="flex flex-1 justify-between sm:hidden">
           <button

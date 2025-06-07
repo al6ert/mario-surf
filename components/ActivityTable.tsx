@@ -27,22 +27,6 @@ export default function ActivityTable({
   error,
   onLimitChange
 }: ActivityTableProps) {
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <div className="text-red-500 text-lg font-semibold">{error}</div>
-      </div>
-    );
-  }
-
   // Paginación Tailwind v4
   const totalPages = Math.max(1, Math.ceil(total / limit));
   const start = total === 0 ? 0 : (page - 1) * limit + 1;
@@ -63,6 +47,14 @@ export default function ActivityTable({
     return pages;
   };
 
+  if (error) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="text-red-500 text-lg font-semibold">{error}</div>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="w-full">
@@ -77,18 +69,34 @@ export default function ActivityTable({
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {activities.map(activity => (
-              <tr key={activity.id} className="hover:bg-gray-50">
-                <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900 max-w-[160px] truncate">{activity.name}</td>
-                <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{activity.duration || '-'}</td>
-                <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{activity.price.toFixed(2)}</td>
-                <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{activity.max_participants || '-'}</td>
-                <td className="px-2 py-4 whitespace-nowrap text-sm font-medium">
-                  <button onClick={() => onEdit(activity)} className="text-blue-600 hover:text-blue-900 mr-3">Editar</button>
-                  <button onClick={() => onDelete(activity.id)} className="text-red-600 hover:text-red-900">Eliminar</button>
+            {loading ? (
+              <tr>
+                <td colSpan={5} className="px-2 py-4">
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                  </div>
                 </td>
               </tr>
-            ))}
+            ) : activities.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-2 py-4 text-center text-gray-500">
+                  No hay actividades disponibles
+                </td>
+              </tr>
+            ) : (
+              activities.map(activity => (
+                <tr key={activity.id} className="hover:bg-gray-50">
+                  <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900 max-w-[160px] truncate">{activity.name}</td>
+                  <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{activity.duration || '-'}</td>
+                  <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{activity.price.toFixed(2)}</td>
+                  <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{activity.max_participants || '-'}</td>
+                  <td className="px-2 py-4 whitespace-nowrap text-sm font-medium">
+                    <button onClick={() => onEdit(activity)} className="text-blue-600 hover:text-blue-900 mr-3">Editar</button>
+                    <button onClick={() => onDelete(activity.id)} className="text-red-600 hover:text-red-900">Eliminar</button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

@@ -55,14 +55,6 @@ export default function ExpenseTable({
     return pages;
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -86,44 +78,60 @@ export default function ExpenseTable({
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {expenses.map((expense) => (
-              <tr key={expense.id} className="hover:bg-gray-50">
-                <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {new Date(expense.date).toLocaleDateString()}
-                </td>
-                <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{expense.description}</td>
-                <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-500">{CATEGORY_LABELS[expense.category] || expense.category}</td>
-                <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{expense.amount.toFixed(2)} €</td>
-                <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <div className="group relative">
-                    <span className="truncate block max-w-[120px]">{expense.notes}</span>
-                    {expense.notes && (
-                      <div className="absolute z-10 hidden group-hover:block bg-gray-900 text-white text-xs rounded py-1 px-2 -top-8 left-1/2 transform -translate-x-1/2 whitespace-pre-wrap min-w-[150px] max-w-[200px]">
-                        {expense.notes}
-                      </div>
-                    )}
+            {loading ? (
+              <tr>
+                <td colSpan={6} className="px-2 py-4">
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
                   </div>
                 </td>
-                <td className="px-2 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button
-                    onClick={() => onEdit(expense)}
-                    className="text-blue-600 hover:text-blue-900 mr-4"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    onClick={() => onDelete(expense.id)}
-                    className="text-red-600 hover:text-red-900"
-                  >
-                    Eliminar
-                  </button>
+              </tr>
+            ) : expenses.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-2 py-4 text-center text-gray-500">
+                  No hay gastos disponibles
                 </td>
               </tr>
-            ))}
+            ) : (
+              expenses.map((expense) => (
+                <tr key={expense.id} className="hover:bg-gray-50">
+                  <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {new Date(expense.date).toLocaleDateString()}
+                  </td>
+                  <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{expense.description}</td>
+                  <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-500">{CATEGORY_LABELS[expense.category] || expense.category}</td>
+                  <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{expense.amount.toFixed(2)} €</td>
+                  <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div className="group relative">
+                      <span className="truncate block max-w-[120px]">{expense.notes}</span>
+                      {expense.notes && (
+                        <div className="absolute z-10 hidden group-hover:block bg-gray-900 text-white text-xs rounded py-1 px-2 -top-8 left-1/2 transform -translate-x-1/2 whitespace-pre-wrap min-w-[150px] max-w-[200px]">
+                          {expense.notes}
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-2 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button
+                      onClick={() => onEdit(expense)}
+                      className="text-blue-600 hover:text-blue-900 mr-4"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => onDelete(expense.id)}
+                      className="text-red-600 hover:text-red-900"
+                    >
+                      Eliminar
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
-      {/* Paginación */}
+      {/* Paginación Tailwind v4 */}
       <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
         <div className="flex flex-1 justify-between sm:hidden">
           <button

@@ -29,22 +29,6 @@ export default function MonitorTable({
   error,
   onLimitChange
 }: MonitorTableProps) {
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <div className="text-red-500 text-lg font-semibold">{error}</div>
-      </div>
-    );
-  }
-
   // Pagination logic
   const totalPages = Math.ceil(total / limit);
   const start = (page - 1) * limit + 1;
@@ -65,6 +49,14 @@ export default function MonitorTable({
     return pages;
   };
 
+  if (error) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="text-red-500 text-lg font-semibold">{error}</div>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="w-full">
@@ -80,47 +72,50 @@ export default function MonitorTable({
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {monitors.map(monitor => (
-              <tr key={monitor.id} className="hover:bg-gray-50">
-                <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{monitor.name}</td>
-                <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{monitor.email}</td>
-                <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{monitor.phone}</td>
-                <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{monitor.specialty}</td>
-                <td className="px-2 py-4 whitespace-nowrap text-center text-sm">
-                  <select
-                    value={monitor.active ? 'active' : 'inactive'}
-                    onChange={e => onStatusChange(monitor.id, e.target.value === 'active')}
-                    className={
-                      monitor.active
-                        ? 'bg-green-100 text-green-800 px-2 py-1 rounded font-semibold'
-                        : 'bg-red-100 text-red-800 px-2 py-1 rounded font-semibold'
-                    }
-                    style={{ minWidth: 110 }}
-                  >
-                    <option value="active">Activo</option>
-                    <option value="inactive">Inactivo</option>
-                  </select>
-                </td>
-                <td className="px-2 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button
-                    onClick={() => onEdit(monitor)}
-                    className="text-blue-600 hover:text-blue-900 mr-4"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    onClick={() => onDelete(monitor.id)}
-                    className="text-red-600 hover:text-red-900"
-                  >
-                    Eliminar
-                  </button>
+            {loading ? (
+              <tr>
+                <td colSpan={6} className="px-2 py-4">
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                  </div>
                 </td>
               </tr>
-            ))}
+            ) : monitors.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-2 py-4 text-center text-gray-500">
+                  No hay monitores disponibles
+                </td>
+              </tr>
+            ) : (
+              monitors.map(monitor => (
+                <tr key={monitor.id} className="hover:bg-gray-50">
+                  <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900 max-w-[160px] truncate">{monitor.name}</td>
+                  <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{monitor.email}</td>
+                  <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{monitor.phone}</td>
+                  <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{monitor.specialty}</td>
+                  <td className="px-2 py-4 whitespace-nowrap text-sm text-center">
+                    <button
+                      onClick={() => onStatusChange(monitor.id, !monitor.active)}
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        monitor.active
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}
+                    >
+                      {monitor.active ? 'Activo' : 'Inactivo'}
+                    </button>
+                  </td>
+                  <td className="px-2 py-4 whitespace-nowrap text-sm font-medium text-right">
+                    <button onClick={() => onEdit(monitor)} className="text-blue-600 hover:text-blue-900 mr-3">Editar</button>
+                    <button onClick={() => onDelete(monitor.id)} className="text-red-600 hover:text-red-900">Eliminar</button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
-      {/* Pagination */}
+      {/* Paginación Tailwind v4 */}
       <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
         <div className="flex flex-1 justify-between sm:hidden">
           <button

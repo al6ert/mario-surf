@@ -55,22 +55,6 @@ export default function BookingTable({
   const [tempDate, setTempDate] = useState('');
   const [tempTime, setTempTime] = useState('');
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <div className="text-red-500 text-lg font-semibold">{error}</div>
-      </div>
-    );
-  }
-
   const totalPages = Math.ceil(total / limit);
   const start = (page - 1) * limit + 1;
   const end = Math.min(page * limit, total);
@@ -90,6 +74,14 @@ export default function BookingTable({
     return pages;
   };
 
+  if (error) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="text-red-500 text-lg font-semibold">{error}</div>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="w-full">
@@ -105,150 +97,178 @@ export default function BookingTable({
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {bookings.map((booking) => {
-              const client = clients.find(c => c.id === booking.client_id);
-              const activity = activities.find(a => a.id === booking.activity_id);
-              const monitor = monitors.find(m => m.id === booking.monitor_id);
-              return (
-                <tr key={booking.id} className="hover:bg-gray-50">
-                  <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900 max-w-[140px] truncate cursor-pointer hover:bg-blue-50"
-                    onClick={() => {
-                      setEditingDateId(booking.id);
-                      setTempDate(booking.date);
-                      setTempTime(booking.time);
-                    }}
-                  >
-                    {editingDateId === booking.id ? (
-                      <div className="flex gap-1 items-center w-full">
-                        <input
-                          type="date"
-                          className="w-[110px] h-full bg-transparent border-none text-sm truncate focus:outline-none"
-                          value={tempDate}
-                          onChange={e => setTempDate(e.target.value)}
-                          onBlur={() => {
-                            setEditingDateId(null);
-                            onDateTimeChange(booking.id, tempDate, tempTime);
-                          }}
-                        />
-                        <input
-                          type="time"
-                          step="900"
-                          className="w-[70px] h-full bg-transparent border-none text-sm truncate focus:outline-none"
-                          value={tempTime}
-                          onChange={e => setTempTime(e.target.value)}
-                          onBlur={() => {
-                            setEditingDateId(null);
-                            onDateTimeChange(booking.id, tempDate, tempTime);
-                          }}
-                        />
-                      </div>
-                    ) : (
-                      booking.date && booking.time ? `${booking.date} ${booking.time}` : ''
-                    )}
-                  </td>
-                  <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900 max-w-[120px] truncate cursor-pointer hover:bg-blue-50"
-                    onClick={() => setEditingClientId(booking.id)}
-                  >
-                    {editingClientId === booking.id ? (
-                      <select
-                        className="w-full h-full bg-transparent border-none text-sm truncate focus:outline-none"
-                        value={booking.client_id}
-                        autoFocus
-                        onBlur={() => setEditingClientId(null)}
-                        onChange={e => {
-                          if (e.target.value === 'new') {
-                            setShowNewClientModal(true);
-                          } else {
-                            onClientChange(booking.id, Number(e.target.value));
-                          }
-                        }}
-                      >
-                        <option value="new">+ Nuevo cliente</option>
-                        {clients.map((client) => (
-                          <option key={client.id} value={client.id}>{client.name}</option>
-                        ))}
-                      </select>
-                    ) : (
-                      client?.name || 'N/A'
-                    )}
-                  </td>
-                  <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900 max-w-[120px] truncate cursor-pointer hover:bg-blue-50"
-                    onClick={() => setEditingActivityId(booking.id)}
-                  >
-                    {editingActivityId === booking.id ? (
-                      <select
-                        className="w-full h-full bg-transparent border-none text-sm truncate focus:outline-none"
-                        value={booking.activity_id}
-                        autoFocus
-                        onBlur={() => setEditingActivityId(null)}
-                        onChange={e => {
-                          onActivityChange(booking.id, Number(e.target.value));
-                        }}
-                      >
-                        {activities.map((activity) => (
-                          <option key={activity.id} value={activity.id}>{activity.name}</option>
-                        ))}
-                      </select>
-                    ) : (
-                      activity?.name || 'N/A'
-                    )}
-                  </td>
-                  <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900 max-w-[120px] truncate cursor-pointer hover:bg-blue-50"
-                    onClick={() => setEditingMonitorId(booking.id)}
-                  >
-                    {editingMonitorId === booking.id ? (
-                      <select
-                        className="w-full h-full bg-transparent border-none text-sm truncate focus:outline-none"
-                        value={booking.monitor_id}
-                        autoFocus
-                        onBlur={() => setEditingMonitorId(null)}
-                        onChange={e => {
-                          onMonitorChange(booking.id, Number(e.target.value));
-                        }}
-                      >
-                        {monitors.map((monitor) => (
-                          <option key={monitor.id} value={monitor.id}>{monitor.name}</option>
-                        ))}
-                      </select>
-                    ) : (
-                      monitor?.name || 'N/A'
-                    )}
-                  </td>
-                  <td className="px-2 py-4 whitespace-nowrap">
-                    <select
-                      value={booking.status}
-                      onChange={e => onStatusChange(booking.id, e.target.value as 'confirmed' | 'pending' | 'cancelled')}
-                      className={
-                        booking.status === 'confirmed'
-                          ? 'bg-green-100 text-green-800 px-2 py-1 rounded font-semibold text-xs'
-                          : booking.status === 'pending'
-                          ? 'bg-yellow-100 text-yellow-800 px-2 py-1 rounded font-semibold text-xs'
-                          : 'bg-red-100 text-red-800 px-2 py-1 rounded font-semibold text-xs'
-                      }
-                      style={{ minWidth: 110 }}
+            {loading ? (
+              <tr>
+                <td colSpan={6} className="px-2 py-4">
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                  </div>
+                </td>
+              </tr>
+            ) : bookings.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-2 py-4 text-center text-gray-500">
+                  No hay reservas disponibles
+                </td>
+              </tr>
+            ) : (
+              bookings.map((booking) => {
+                const client = clients.find(c => c.id === booking.client_id);
+                const activity = activities.find(a => a.id === booking.activity_id);
+                const monitor = monitors.find(m => m.id === booking.monitor_id);
+                return (
+                  <tr key={booking.id} className="hover:bg-gray-50">
+                    <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900 max-w-[140px] truncate cursor-pointer hover:bg-blue-50"
+                      onClick={() => {
+                        setEditingDateId(booking.id);
+                        setTempDate(booking.date);
+                        setTempTime(booking.time);
+                      }}
                     >
-                      <option value="confirmed">Confirmada</option>
-                      <option value="pending">Pendiente</option>
-                      <option value="cancelled">Cancelada</option>
-                    </select>
-                  </td>
-                  <td className="px-2 py-4 whitespace-nowrap text-sm font-medium">
-                    <button
-                      onClick={() => onEdit(booking)}
-                      className="text-blue-600 hover:text-blue-900 mr-3"
+                      {editingDateId === booking.id ? (
+                        <div className="flex gap-2">
+                          <input
+                            type="date"
+                            value={tempDate}
+                            onChange={e => setTempDate(e.target.value)}
+                            className="border rounded px-2 py-1"
+                          />
+                          <input
+                            type="time"
+                            value={tempTime}
+                            onChange={e => setTempTime(e.target.value)}
+                            className="border rounded px-2 py-1"
+                          />
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDateTimeChange(booking.id, tempDate, tempTime);
+                              setEditingDateId(null);
+                            }}
+                            className="text-green-600 hover:text-green-900"
+                          >
+                            ✓
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingDateId(null);
+                            }}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        `${booking.date} ${booking.time}`
+                      )}
+                    </td>
+                    <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900 max-w-[160px] truncate cursor-pointer hover:bg-blue-50"
+                      onClick={() => {
+                        setEditingClientId(booking.id);
+                        setShowNewClientModal(false);
+                      }}
                     >
-                      Editar
-                    </button>
-                    <button
-                      onClick={() => onDelete(booking.id)}
-                      className="text-red-600 hover:text-red-900 mr-3"
+                      {editingClientId === booking.id ? (
+                        <div className="flex gap-2">
+                          <select
+                            value={booking.client_id}
+                            onChange={e => onClientChange(booking.id, Number(e.target.value))}
+                            className="border rounded px-2 py-1"
+                          >
+                            {clients.map(c => (
+                              <option key={c.id} value={c.id}>{c.name}</option>
+                            ))}
+                          </select>
+                          <button
+                            onClick={() => {
+                              setEditingClientId(null);
+                              setShowNewClientModal(true);
+                            }}
+                            className="text-blue-600 hover:text-blue-900"
+                          >
+                            + Nuevo
+                          </button>
+                        </div>
+                      ) : (
+                        client?.name || 'Cliente no encontrado'
+                      )}
+                    </td>
+                    <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900 max-w-[160px] truncate cursor-pointer hover:bg-blue-50"
+                      onClick={() => setEditingActivityId(booking.id)}
                     >
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
+                      {editingActivityId === booking.id ? (
+                        <div className="flex gap-2">
+                          <select
+                            value={booking.activity_id}
+                            onChange={e => onActivityChange(booking.id, Number(e.target.value))}
+                            className="border rounded px-2 py-1"
+                          >
+                            {activities.map(a => (
+                              <option key={a.id} value={a.id}>{a.name}</option>
+                            ))}
+                          </select>
+                          <button
+                            onClick={() => setEditingActivityId(null)}
+                            className="text-green-600 hover:text-green-900"
+                          >
+                            ✓
+                          </button>
+                        </div>
+                      ) : (
+                        activity?.name || 'Actividad no encontrada'
+                      )}
+                    </td>
+                    <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900 max-w-[160px] truncate cursor-pointer hover:bg-blue-50"
+                      onClick={() => setEditingMonitorId(booking.id)}
+                    >
+                      {editingMonitorId === booking.id ? (
+                        <div className="flex gap-2">
+                          <select
+                            value={booking.monitor_id}
+                            onChange={e => onMonitorChange(booking.id, Number(e.target.value))}
+                            className="border rounded px-2 py-1"
+                          >
+                            {monitors.map(m => (
+                              <option key={m.id} value={m.id}>{m.name}</option>
+                            ))}
+                          </select>
+                          <button
+                            onClick={() => setEditingMonitorId(null)}
+                            className="text-green-600 hover:text-green-900"
+                          >
+                            ✓
+                          </button>
+                        </div>
+                      ) : (
+                        monitor?.name || 'Monitor no encontrado'
+                      )}
+                    </td>
+                    <td className="px-2 py-4 whitespace-nowrap text-sm">
+                      <select
+                        value={booking.status}
+                        onChange={e => onStatusChange(booking.id, e.target.value as 'confirmed' | 'pending' | 'cancelled')}
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          booking.status === 'confirmed'
+                            ? 'bg-green-100 text-green-800'
+                            : booking.status === 'pending'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}
+                      >
+                        <option value="confirmed">Confirmada</option>
+                        <option value="pending">Pendiente</option>
+                        <option value="cancelled">Cancelada</option>
+                      </select>
+                    </td>
+                    <td className="px-2 py-4 whitespace-nowrap text-sm font-medium">
+                      <button onClick={() => onEdit(booking)} className="text-blue-600 hover:text-blue-900 mr-3">Editar</button>
+                      <button onClick={() => onDelete(booking.id)} className="text-red-600 hover:text-red-900">Eliminar</button>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>
