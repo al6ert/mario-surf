@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBarChart, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { supabase } from '../lib/supabase';
-import type { Invoice, Expense } from '../lib/supabase';
+import type { Invoice, Expense, Payroll } from '../lib/supabase';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -34,10 +34,37 @@ export default function Reports() {
     income: number;
     expenses: number;
   }>>([]);
+  const [annualIncome, setAnnualIncome] = useState(0);
+  const [annualExpenses, setAnnualExpenses] = useState(0);
+  const [annualPayroll, setAnnualPayroll] = useState(0);
+  const [annualProfit, setAnnualProfit] = useState(0);
+  const [payrollsByMonth, setPayrollsByMonth] = useState<number[]>(Array(12).fill(0));
 
   useEffect(() => {
     generateFinancialReport();
+    fetchAnnualPayrollsByMonth();
   }, [year]);
+
+  const fetchAnnualPayrollsByMonth = async () => {
+    try {
+      const { data: payrolls, error: payrollsError } = await supabase
+        .from('payrolls')
+        .select('*')
+        .eq('year', year);
+      if (payrollsError) throw new Error(payrollsError.message);
+      const byMonth = Array(12).fill(0);
+      (payrolls || []).forEach((p: Payroll) => {
+        const idx = (p.month || 1) - 1;
+        byMonth[idx] += (p.hours_worked * p.hourly_rate + p.bonus - p.deductions);
+      });
+      setPayrollsByMonth(byMonth);
+      // También actualiza el total anual de nóminas
+      setAnnualPayroll(byMonth.reduce((a, b) => a + b, 0));
+    } catch (err) {
+      setPayrollsByMonth(Array(12).fill(0));
+      setAnnualPayroll(0);
+    }
+  };
 
   const generateFinancialReport = async () => {
     setLoading(true);
@@ -63,28 +90,25 @@ export default function Reports() {
       if (expensesError) throw new Error(`Error al obtener gastos: ${expensesError.message}`);
 
       // Inicializar datos mensuales
-      const monthlyData = Array(12).fill(0).map((_, i) => ({
+      const baseMonthlyData = Array(12).fill(0).map((_, i) => ({
         month: i + 1,
         income: 0,
         expenses: 0
       }));
-
       // Procesar facturas
       invoices?.forEach(invoice => {
         if (!invoice.invoice_items) return;
         const month = new Date(invoice.date).getMonth();
         const total = invoice.invoice_items.reduce((sum: number, item: any) => 
           sum + (item.quantity * item.price), 0);
-        monthlyData[month].income += total;
+        baseMonthlyData[month].income += total;
       });
-
       // Procesar gastos
       expenses?.forEach(expense => {
         const month = new Date(expense.date).getMonth();
-        monthlyData[month].expenses += expense.amount;
+        baseMonthlyData[month].expenses += expense.amount;
       });
-
-      setMonthlyData(monthlyData);
+      setMonthlyData(baseMonthlyData); // Ahora solo gastos directos
     } catch (err: any) {
       console.error('Error in generateFinancialReport:', err);
       setError(`Error al generar el informe: ${err.message}`);
@@ -92,6 +116,34 @@ export default function Reports() {
       setLoading(false);
     }
   };
+
+  // Combina monthlyData y payrollsByMonth en un useEffect
+  const [finalMonthlyData, setFinalMonthlyData] = useState(monthlyData);
+  useEffect(() => {
+    // Suma payrollsByMonth a los gastos mensuales
+    const combined = monthlyData.map((m, idx) => ({
+      ...m,
+      expenses: m.expenses + (payrollsByMonth[idx] || 0)
+    }));
+    setFinalMonthlyData(combined);
+  }, [monthlyData, payrollsByMonth]);
+
+  // Calcula los KPIs anuales a partir de finalMonthlyData
+  useEffect(() => {
+    const totalIncome = finalMonthlyData.reduce((sum, m) => sum + m.income, 0);
+    const totalExpenses = finalMonthlyData.reduce((sum, m) => sum + m.expenses, 0);
+    setAnnualIncome(totalIncome);
+    setAnnualExpenses(totalExpenses);
+    setAnnualProfit(totalIncome - totalExpenses);
+  }, [finalMonthlyData, annualPayroll]);
+
+  // TEST: Comprobar que la suma de la columna GASTOS cuadra con el KPI
+  useEffect(() => {
+    const sumTable = finalMonthlyData.reduce((sum, m) => sum + m.expenses, 0);
+    if (Math.abs(sumTable - annualExpenses) > 0.01) {
+      console.warn('¡La suma de la columna GASTOS no cuadra con el KPI!', sumTable, annualExpenses);
+    }
+  }, [finalMonthlyData, annualExpenses]);
 
   const getMonthName = (month: number) => {
     const months = [
@@ -102,18 +154,18 @@ export default function Reports() {
   };
 
   const chartData = {
-    labels: monthlyData.map(data => getMonthName(data.month)),
+    labels: finalMonthlyData.map(data => getMonthName(data.month)),
     datasets: [
       {
         label: 'Ingresos',
-        data: monthlyData.map(data => data.income),
+        data: finalMonthlyData.map(data => data.income),
         borderColor: 'rgb(75, 192, 192)',
         backgroundColor: 'rgba(75, 192, 192, 0.5)',
         tension: 0.1
       },
       {
         label: 'Gastos',
-        data: monthlyData.map(data => data.expenses),
+        data: finalMonthlyData.map(data => data.expenses),
         borderColor: 'rgb(255, 99, 132)',
         backgroundColor: 'rgba(255, 99, 132, 0.5)',
         tension: 0.1
@@ -179,6 +231,31 @@ export default function Reports() {
           </div>
         )}
 
+        {/* KPIs anuales */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">Ingresos Anuales</h3>
+            <div className="flex items-baseline justify-between">
+              <span className="text-3xl font-bold text-gray-900">{annualIncome.toFixed(2)} €</span>
+            </div>
+            <p className="text-sm text-gray-500 mt-2">Año {year}</p>
+          </div>
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">Gastos Anuales</h3>
+            <div className="flex items-baseline justify-between">
+              <span className="text-3xl font-bold text-gray-900">{(annualExpenses + annualPayroll).toFixed(2)} €</span>
+            </div>
+            <p className="text-sm text-gray-500 mt-2">Año {year}</p>
+          </div>
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">Beneficio Neto</h3>
+            <div className="flex items-baseline justify-between">
+              <span className={`text-3xl font-bold ${annualProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>{annualProfit.toFixed(2)} €</span>
+            </div>
+            <p className="text-sm text-gray-500 mt-2">Año {year}</p>
+          </div>
+        </div>
+
         {loading ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
@@ -209,7 +286,7 @@ export default function Reports() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {monthlyData.map((data) => (
+                    {finalMonthlyData.map((data) => (
                       <tr key={data.month}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {getMonthName(data.month)}
