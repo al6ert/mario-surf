@@ -96,10 +96,9 @@ export default function BookingTable({
         <table className="w-full min-w-0 divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">ID</th>
+              <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Fecha/Hora</th>
               <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Cliente</th>
               <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Actividad</th>
-              <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Fecha/Hora</th>
               <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Monitor</th>
               <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Estado</th>
               <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Acciones</th>
@@ -112,7 +111,41 @@ export default function BookingTable({
               const monitor = monitors.find(m => m.id === booking.monitor_id);
               return (
                 <tr key={booking.id} className="hover:bg-gray-50">
-                  <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-500">{booking.id}</td>
+                  <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900 max-w-[140px] truncate cursor-pointer hover:bg-blue-50"
+                    onClick={() => {
+                      setEditingDateId(booking.id);
+                      setTempDate(booking.date);
+                      setTempTime(booking.time);
+                    }}
+                  >
+                    {editingDateId === booking.id ? (
+                      <div className="flex gap-1 items-center w-full">
+                        <input
+                          type="date"
+                          className="w-[110px] h-full bg-transparent border-none text-sm truncate focus:outline-none"
+                          value={tempDate}
+                          onChange={e => setTempDate(e.target.value)}
+                          onBlur={() => {
+                            setEditingDateId(null);
+                            onDateTimeChange(booking.id, tempDate, tempTime);
+                          }}
+                        />
+                        <input
+                          type="time"
+                          step="900"
+                          className="w-[70px] h-full bg-transparent border-none text-sm truncate focus:outline-none"
+                          value={tempTime}
+                          onChange={e => setTempTime(e.target.value)}
+                          onBlur={() => {
+                            setEditingDateId(null);
+                            onDateTimeChange(booking.id, tempDate, tempTime);
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      booking.date && booking.time ? `${booking.date} ${booking.time}` : ''
+                    )}
+                  </td>
                   <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900 max-w-[120px] truncate cursor-pointer hover:bg-blue-50"
                     onClick={() => setEditingClientId(booking.id)}
                   >
@@ -158,41 +191,6 @@ export default function BookingTable({
                       </select>
                     ) : (
                       activity?.name || 'N/A'
-                    )}
-                  </td>
-                  <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900 max-w-[140px] truncate cursor-pointer hover:bg-blue-50"
-                    onClick={() => {
-                      setEditingDateId(booking.id);
-                      setTempDate(booking.date);
-                      setTempTime(booking.time);
-                    }}
-                  >
-                    {editingDateId === booking.id ? (
-                      <div className="flex gap-1 items-center w-full">
-                        <input
-                          type="date"
-                          className="w-[110px] h-full bg-transparent border-none text-sm truncate focus:outline-none"
-                          value={tempDate}
-                          onChange={e => setTempDate(e.target.value)}
-                          onBlur={() => {
-                            setEditingDateId(null);
-                            onDateTimeChange(booking.id, tempDate, tempTime);
-                          }}
-                        />
-                        <input
-                          type="time"
-                          step="900"
-                          className="w-[70px] h-full bg-transparent border-none text-sm truncate focus:outline-none"
-                          value={tempTime}
-                          onChange={e => setTempTime(e.target.value)}
-                          onBlur={() => {
-                            setEditingDateId(null);
-                            onDateTimeChange(booking.id, tempDate, tempTime);
-                          }}
-                        />
-                      </div>
-                    ) : (
-                      booking.date && booking.time ? `${booking.date} ${booking.time}` : ''
                     )}
                   </td>
                   <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900 max-w-[120px] truncate cursor-pointer hover:bg-blue-50"
