@@ -44,8 +44,13 @@ export default function Payrolls() {
     sort: { field: 'date', direction: 'desc' }
   });
 
+  // Ordenar manualmente por year y luego por month descendente
+  const sortedPayrolls = [...(payrolls || [])].sort((a, b) => {
+    if (b.year !== a.year) return b.year - a.year;
+    return b.month - a.month;
+  });
+
   useEffect(() => {
-    console.log('Current monitors:', monitors);
   }, [monitors]);
 
   const handleAdd = () => {
@@ -54,8 +59,6 @@ export default function Payrolls() {
   };
 
   const handleEdit = (payroll: Payroll) => {
-    console.log('Editing payroll:', payroll);
-    console.log('Available monitors:', monitors);
     // Ensure we have the monitor_id from the payroll data
     const payrollToEdit = {
       ...payroll,
@@ -89,7 +92,6 @@ export default function Payrolls() {
 
   const handleSave = async (payrollData: Partial<Payroll>) => {
     try {
-      console.log('Saving payroll data:', payrollData);
       if (selectedPayroll) {
         await ApiClient.updatePayroll(selectedPayroll.id, payrollData);
       } else {
@@ -144,7 +146,7 @@ export default function Payrolls() {
           </div>
         </div>
         <PayrollTable
-          payrolls={payrolls}
+          payrolls={sortedPayrolls}
           monitors={monitors}
           total={total}
           page={page}
