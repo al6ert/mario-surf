@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../contexts/AppContext';
 import { createClient, updateClient, createActivity, updateActivity, createMonitor, updateMonitor, createBooking, updateBooking, createInvoice, updateInvoice } from '../lib/data';
 import type { Client, Activity, Monitor, Booking, Invoice, InvoiceItem, Settings, Expense, Payroll } from '../lib/supabase';
@@ -31,9 +31,18 @@ function AppContent() {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [monitorSearch, setMonitorSearch] = useState('');
 
+  // Load saved section from localStorage on mount
+  useEffect(() => {
+    const savedSection = localStorage.getItem('lastActiveSection');
+    if (savedSection) {
+      setActiveSection(savedSection);
+    }
+  }, []);
+
   // Handle section change
   const handleSectionChange = (section: string) => {
     setActiveSection(section);
+    localStorage.setItem('lastActiveSection', section);
   };
 
   // Handle client form
