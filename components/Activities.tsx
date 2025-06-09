@@ -3,14 +3,15 @@ import { supabase, Activity } from '../lib/supabase';
 import ActivityModal from './ActivityModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBicycle } from '@fortawesome/free-solid-svg-icons';
-import { usePaginatedData, LIMIT} from '../hooks/usePaginatedData';
+import { usePaginatedData } from '../hooks/usePaginatedData';
 import { useSearch } from '../hooks/useSearch';
 import ActivityTable from './ActivityTable';
+import { useGlobalLimit } from '../hooks/useGlobalLimit';
 
 export default function Activities() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
-  const [limit, setLimit] = useState(LIMIT);
+  const { limit, setLimit } = useGlobalLimit();
 
   const {
     searchTerm,

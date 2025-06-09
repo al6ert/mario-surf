@@ -1,8 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { useAppContext } from '../contexts/AppContext';
 import { ApiClient } from '../lib/api';
-
-export const LIMIT = 5;
+import { useGlobalLimit } from './useGlobalLimit';
 
 export interface PaginationOptions {
   page: number;
@@ -19,6 +18,7 @@ export function usePaginatedData(
   options: PaginationOptions
 ) {
   const { refresh } = useAppContext();
+  const { limit: globalLimit } = useGlobalLimit();
   const [data, setData] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -29,7 +29,7 @@ export function usePaginatedData(
     try {
       const { data, count } = await ApiClient[`get${entityType}`]({
         page: options.page,
-        limit: options.limit,
+        limit: options.limit || globalLimit,
         filters: options.filters,
         sort: options.sort
       });
@@ -48,7 +48,7 @@ export function usePaginatedData(
     fetchData();
   }, [
     options.page, 
-    options.limit, 
+    options.limit || globalLimit, 
     JSON.stringify(options.filters),
     options.sort?.field, 
     options.sort?.direction

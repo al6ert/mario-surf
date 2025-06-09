@@ -4,15 +4,16 @@ import InvoiceModal from './InvoiceModal';
 import { updateInvoice, createInvoice } from '../lib/data';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileText } from '@fortawesome/free-solid-svg-icons';
-import { usePaginatedData, LIMIT } from '../hooks/usePaginatedData';
+import { usePaginatedData } from '../hooks/usePaginatedData';
 import { useDebounce } from '../hooks/useDebounce';
 import InvoiceTable from './InvoiceTable';
 import { useSearchAndFilters } from '../hooks/useSearchAndFilters';
+import { useGlobalLimit } from '../hooks/useGlobalLimit';
 
 export default function Invoices() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
-  const [limit, setLimit] = useState(LIMIT);
+  const { limit, setLimit } = useGlobalLimit();
 
   const {
     searchTerm,

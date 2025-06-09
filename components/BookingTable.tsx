@@ -55,11 +55,12 @@ export default function BookingTable({
   const [tempDate, setTempDate] = useState('');
   const [tempTime, setTempTime] = useState('');
 
-  const totalPages = Math.ceil(total / limit);
-  const start = (page - 1) * limit + 1;
-  const end = Math.min(page * limit, total);
-  const getPageNumbers = () => {
-    const pages = [];
+  const safeLimit = typeof limit === 'number' && !isNaN(limit) && limit > 0 ? limit : 1;
+  const totalPages = Math.ceil(total / safeLimit);
+  const start = (page - 1) * safeLimit + 1;
+  const end = Math.min(page * safeLimit, total);
+  const getPageNumbers = (): (number | string)[] => {
+    const pages: (number | string)[] = [];
     if (totalPages <= 7) {
       for (let i = 1; i <= totalPages; i++) pages.push(i);
     } else {

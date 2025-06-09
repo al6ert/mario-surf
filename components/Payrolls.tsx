@@ -5,10 +5,11 @@ import PayrollModal from './PayrollModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEuro } from '@fortawesome/free-solid-svg-icons';
 import PayrollTable from './PayrollTable';
-import { LIMIT, usePaginatedData } from '../hooks/usePaginatedData';
+import { usePaginatedData } from '../hooks/usePaginatedData';
 import { useSearchAndFilters } from '../hooks/useSearchAndFilters';
 import { createPayroll, updatePayroll, deletePayroll } from '../lib/data';
 import { ApiClient } from '../lib/api';
+import { useGlobalLimit } from '../hooks/useGlobalLimit';
 
 const MONTHS = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -20,7 +21,7 @@ export default function Payrolls() {
   const { monitors } = state;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPayroll, setSelectedPayroll] = useState<Payroll | null>(null);
-  const [limit, setLimit] = useState(LIMIT);
+  const { limit, setLimit } = useGlobalLimit();
   
   const {
     searchTerm,
@@ -154,7 +155,7 @@ export default function Payrolls() {
           onStatusChange={handleStatusChange}
           loading={loading}
           error={error}
-          onLimitChange={setLimit}
+          onLimitChange={newLimit => { setLimit(newLimit); setPage(1); }}
         />
       </div>
       <PayrollModal
@@ -164,7 +165,7 @@ export default function Payrolls() {
           setSelectedPayroll(null);
         }}
         onSave={handleSave}
-        payroll={selectedPayroll}
+        payroll={selectedPayroll ?? undefined}
         monitors={monitors}
       />
     </div>

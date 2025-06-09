@@ -4,15 +4,16 @@ import ClientModal from './ClientModal';
 import { DocumentTextIcon } from '@heroicons/react/24/outline';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUsers } from '@fortawesome/free-solid-svg-icons';
-import { usePaginatedData, LIMIT } from '../hooks/usePaginatedData';
+import { usePaginatedData } from '../hooks/usePaginatedData';
 import { useDebounce } from '../hooks/useDebounce';
 import ClientTable from './ClientTable';
 import { useSearch } from '../hooks/useSearch';
+import { useGlobalLimit } from '../hooks/useGlobalLimit';
 
 export default function Clients() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [limit, setLimit] = useState(LIMIT);
+  const { limit, setLimit } = useGlobalLimit();
   
   const {
     searchTerm,

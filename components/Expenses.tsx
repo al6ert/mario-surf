@@ -3,10 +3,11 @@ import { supabase, Expense } from '../lib/supabase';
 import ExpenseModal from './ExpenseModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMoneyBill } from '@fortawesome/free-solid-svg-icons';
-import { usePaginatedData, LIMIT } from '../hooks/usePaginatedData';
+import { usePaginatedData } from '../hooks/usePaginatedData';
 import { useDebounce } from '../hooks/useDebounce';
 import ExpenseTable from './ExpenseTable';
 import { useSearchAndFilters } from '../hooks/useSearchAndFilters';
+import { useGlobalLimit } from '../hooks/useGlobalLimit';
 
 const CATEGORY_LABELS: Record<string, string> = {
   supplies: 'Suministros',
@@ -19,7 +20,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 export default function Expenses() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
-  const [limit, setLimit] = useState(LIMIT);
+  const { limit, setLimit } = useGlobalLimit();
 
   const {
     searchTerm,
@@ -61,11 +62,10 @@ export default function Expenses() {
   const handleDelete = async (id: number) => {
     if (!confirm('¿Eliminar este gasto?')) return;
     try {
-      const { error } = await supabase.from('expenses').delete().eq('id', id);
-      if (error) throw error;
+      await supabase.from('expenses').delete().eq('id', id);
       refreshTable();
-    } catch (err: any) {
-      console.error(err);
+    } catch (error) {
+      console.error('Error deleting expense:', error);
     }
   };
 

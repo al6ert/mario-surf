@@ -4,15 +4,16 @@ import MonitorModal from './MonitorModal';
 import { deleteMonitor, updateMonitor, createMonitor } from '../lib/data';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserSecret } from '@fortawesome/free-solid-svg-icons';
-import { usePaginatedData, LIMIT } from '../hooks/usePaginatedData';
+import { usePaginatedData } from '../hooks/usePaginatedData';
 import { useDebounce } from '../hooks/useDebounce';
 import MonitorTable from './MonitorTable';
 import { useSearchAndFilters } from '../hooks/useSearchAndFilters';
+import { useGlobalLimit } from '../hooks/useGlobalLimit';
 
 export default function Monitors() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMonitor, setSelectedMonitor] = useState<Monitor | null>(null);
-  const [limit, setLimit] = useState(LIMIT);
+  const { limit, setLimit } = useGlobalLimit();
 
   const {
     searchTerm,

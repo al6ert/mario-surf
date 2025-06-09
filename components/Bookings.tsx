@@ -7,8 +7,9 @@ import ClientModal from './ClientModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBook } from '@fortawesome/free-solid-svg-icons';
 import BookingTable from './BookingTable';
-import { LIMIT, usePaginatedData } from '../hooks/usePaginatedData';
+import { usePaginatedData } from '../hooks/usePaginatedData';
 import { useSearch } from '../hooks/useSearch';
+import { useGlobalLimit } from '../hooks/useGlobalLimit';
 
 export default function Bookings() {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -27,7 +28,7 @@ export default function Bookings() {
   const [editingDateId, setEditingDateId] = useState<number | null>(null);
   const [tempDate, setTempDate] = useState('');
   const [tempTime, setTempTime] = useState('');
-  const [limit, setLimit] = useState(LIMIT);
+  const { limit, setLimit } = useGlobalLimit();
   
   const {
     searchTerm,
@@ -306,7 +307,7 @@ export default function Bookings() {
               onStatusChange={handleStatusChange}
               loading={loading}
               error={error}
-              onLimitChange={setLimit}
+              onLimitChange={newLimit => { setLimit(newLimit); setPage(1); }}
               setEditingClientId={setEditingClientId}
               editingClientId={editingClientId}
               setShowNewClientModal={setShowNewClientModal}
