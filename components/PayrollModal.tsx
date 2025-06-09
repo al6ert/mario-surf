@@ -30,7 +30,8 @@ export default function PayrollModal({
     bonus: 0,
     deductions: 0,
     paid: false,
-    notes: ''
+    notes: '',
+    date: new Date().toISOString().split('T')[0]
   });
 
   useEffect(() => {
@@ -51,15 +52,21 @@ export default function PayrollModal({
         bonus: 0,
         deductions: 0,
         paid: false,
-        notes: ''
+        notes: '',
+        date: new Date().toISOString().split('T')[0]
       });
     }
   }, [payroll, monitors]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Submitting form data:', formData);
-    onSave(formData);
+    const date = new Date(formData.year!, formData.month! - 1, 1).toISOString().split('T')[0];
+    const submitData = {
+      ...formData,
+      date
+    };
+    console.log('Submitting form data:', submitData);
+    onSave(submitData);
   };
 
   const getBaseSalary = () => {
@@ -245,8 +252,8 @@ export default function PayrollModal({
                 <div className="mt-6 flex items-center justify-between border-t border-gray-200 pt-6">
                   <div className="text-right">
                     <div className="text-sm text-gray-600">Salario Base: {getBaseSalary().toFixed(2)} €</div>
-                    {formData.bonus > 0 && <div className="text-sm text-gray-600">Bonus: {formData.bonus.toFixed(2)} €</div>}
-                    {formData.deductions > 0 && <div className="text-sm text-gray-600">Deducciones: {formData.deductions.toFixed(2)} €</div>}
+                    {(formData.bonus ?? 0) > 0 && <div className="text-sm text-gray-600">Bonus: {(formData.bonus ?? 0).toFixed(2)} €</div>}
+                    {(formData.deductions ?? 0) > 0 && <div className="text-sm text-gray-600">Deducciones: {(formData.deductions ?? 0).toFixed(2)} €</div>}
                     <div className="text-lg font-semibold text-gray-900">Total: {getTotal().toFixed(2)} €</div>
                   </div>
                   <div className="flex gap-3">
