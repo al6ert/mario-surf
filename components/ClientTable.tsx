@@ -31,8 +31,6 @@ export default function ClientTable({
 }: ClientTableProps) {
   const { totalPages, start, end, pageNumbers } = usePagination({ total, page, limit });
 
-  // Debug: log page y pageNumbers para depuración de paginación
-  console.log('[ClientTable] page:', page, 'pageNumbers:', pageNumbers);
 
   if (error) {
     return (

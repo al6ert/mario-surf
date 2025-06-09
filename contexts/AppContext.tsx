@@ -19,8 +19,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     // Cargar datos si el estado está vacío o si no hay monitores
     if ((!state.clients.length || !state.monitors.length) && !state.loading) {
       console.log('Loading initial data...');
-      loadData().then(newState => {
-        console.log('Loaded monitors:', newState.monitors);
+      loadData().then(newState => {        
         setState(newState);
       });
     }
@@ -28,8 +27,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const refresh = async () => {
     console.log('Refreshing app state...');
-    const newState = await loadData();
-    console.log('Refreshed monitors:', newState.monitors);
+    const newState = await loadData();    
     setState(newState);
   };
 
