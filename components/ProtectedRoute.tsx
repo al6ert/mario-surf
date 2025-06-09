@@ -8,22 +8,45 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
   const router = useRouter();
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsAuthenticated(!!session);
+    // Check initial session
+    const checkSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error checking session:', error);
+          setIsAuthenticated(false);
+          return;
+        }
+
+        setIsAuthenticated(!!session);
+      } catch (error) {
+        console.error('Error in session check:', error);
+        setIsAuthenticated(false);
+      }
     };
 
-    checkAuth();
+    checkSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsAuthenticated(!!session);
+    // Subscribe to auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state changed:', event, session ? 'Session exists' : 'No session');
+      
+      if (event === 'SIGNED_OUT') {
+        setIsAuthenticated(false);
+        router.push('/');
+      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        setIsAuthenticated(true);
+      }
     });
 
+    // Cleanup subscription
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [router]);
 
+  // Show loading state while checking authentication
   if (isAuthenticated === null) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -32,9 +55,11 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
     );
   }
 
+  // Show auth page if not authenticated
   if (!isAuthenticated) {
     return <Auth />;
   }
 
+  // Show protected content if authenticated
   return <>{children}</>;
 } 
