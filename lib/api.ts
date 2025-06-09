@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import type { Client, Activity, Monitor, Booking, Invoice, InvoiceItem, Expense, Payroll, Settings } from './supabase';
-import { LIMIT } from '../hooks/usePaginatedData';
+
+const DEFAULT_LIMIT = 20;
 
 export class ApiError extends Error {
   constructor(message: string, public status?: number) {
@@ -774,7 +775,7 @@ export class ApiClient {
   // Payrolls
   static async getPayrolls({
     page = 1,
-    limit = LIMIT,
+    limit = DEFAULT_LIMIT,
     filters,
     sort
   }: {

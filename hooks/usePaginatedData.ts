@@ -3,6 +3,8 @@ import { useAppContext } from '../contexts/AppContext';
 import { ApiClient } from '../lib/api';
 import { useGlobalLimit } from './useGlobalLimit';
 
+export const LIMIT = 20;
+
 export interface PaginationOptions {
   page: number;
   limit: number;
