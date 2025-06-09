@@ -22,7 +22,11 @@ export default function Calendar({ bookings: initialBookings, clients: initialCl
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const [selectedDate, setSelectedDate] = useState<string | null>(() => {
+    const hasTodayBookings = initialBookings?.some(b => b.date === todayStr && b.status !== 'cancelled');
+    return hasTodayBookings ? todayStr : null;
+  });
   const [bookings, setBookings] = useState<Booking[]>(initialBookings || []);
   const [clients, setClients] = useState<Client[]>(initialClients || []);
   const [activities, setActivities] = useState<Activity[]>(initialActivities || []);
