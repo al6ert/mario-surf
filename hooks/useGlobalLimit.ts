@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
 const STORAGE_KEY = 'global_items_per_page_limit';
-const DEFAULT_LIMIT = 5;
+const DEFAULT_LIMIT = 20;
 
 export function useGlobalLimit() {
   // Initialize state with the value from localStorage or default

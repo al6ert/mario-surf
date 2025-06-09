@@ -8,7 +8,7 @@ interface ItemsPerPageSelectProps {
   className?: string;
 }
 
-export const ITEMS_PER_PAGE_OPTIONS = [5, 20, 50, 100];
+export const ITEMS_PER_PAGE_OPTIONS = [20, 50, 100];
 
 export default function ItemsPerPageSelect({ 
   value,

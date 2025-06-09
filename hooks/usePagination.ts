@@ -15,34 +15,28 @@ export function usePagination({ total, page, limit }: UsePaginationProps) {
     // Always show all pages if 7 or fewer
     if (totalPages <= 7) {
       const result = Array.from({ length: totalPages }, (_, i) => i + 1);
-      console.log(`[PAGINATION] totalPages: ${totalPages}, page: ${page}, result:`, result);
       return result;
     }
     // Casos especiales para el principio
     if (page <= 2) {
       const result = [1, 2, 3, '...', totalPages];
-      console.log(`[PAGINATION] totalPages: ${totalPages}, page: ${page}, result:`, result);
       return result;
     }
     if (page === 3) {
       const result = [1, 2, 3, 4, '...', totalPages];
-      console.log(`[PAGINATION] totalPages: ${totalPages}, page: ${page}, result:`, result);
       return result;
     }
     // Casos especiales para el final
     if (page === totalPages - 2) {
       const result = [1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
-      console.log(`[PAGINATION] totalPages: ${totalPages}, page: ${page}, result:`, result);
       return result;
     }
     if (page >= totalPages - 1) {
       const result = [1, '...', totalPages - 2, totalPages - 1, totalPages];
-      console.log(`[PAGINATION] totalPages: ${totalPages}, page: ${page}, result:`, result);
       return result;
     }
     // Caso general
     const result = [1, '...', page - 1, page, page + 1, '...', totalPages];
-    console.log(`[PAGINATION] totalPages: ${totalPages}, page: ${page}, result:`, result);
     return result;
   }, [totalPages, page]);
 
