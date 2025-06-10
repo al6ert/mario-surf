@@ -75,7 +75,7 @@ export async function loadData(): Promise<AppState> {
       ApiClient.getClients({ page: 1, limit: 100 }),
       ApiClient.getActivities(),
       ApiClient.getMonitors(),
-      ApiClient.getBookings({ page: 1, limit: 100 }),
+      ApiClient.getBookings(),
       ApiClient.getInvoices({ page: 1, limit: 100 }),
       ApiClient.getExpenses(),
       ApiClient.getPayrolls({ page: 1, limit: 100 }),
