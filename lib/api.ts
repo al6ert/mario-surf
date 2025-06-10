@@ -229,17 +229,62 @@ export class ApiClient {
   }
 
   // Bookings
-  static async getBookings() {
+  static async getBookings(options?: {
+    page?: number;
+    limit?: number;
+    filters?: { search?: string; status?: string };
+    sort?: { field: string; direction: 'asc' | 'desc' };
+  }) {
     try {
-      const { data, error } = await supabase
+      const { page, limit, filters, sort } = options || {};
+      let query = supabase
         .from('bookings')
-        .select('*', { count: 'exact' })
-        .order('date', { ascending: false });
+        .select(`
+          *,
+          c:clients(),
+          clients(name),
+          activities(name),
+          monitors(name)
+        `, { count: 'exact' });
+
+      // Apply search filter if provided
+      if (filters?.search) {
+        const searchTerm = `%${filters.search}%`;
+        // Filter on client name
+        query = query.filter('c.name', 'ilike', searchTerm);
+        // Filter on activity name
+        query = query.filter('activities.name', 'ilike', searchTerm);
+        // Filter on monitor name
+        query = query.filter('monitors.name', 'ilike', searchTerm);
+        // Combine with OR
+        query = query.or('c.not.is.null,activities.not.is.null,monitors.not.is.null');
+      }
+
+      // Apply status filter if provided
+      if (filters?.status && filters.status !== 'all') {
+        query = query.eq('status', filters.status);
+      }
+
+      // Apply sorting
+      if (sort) {
+        query = query.order(sort.field, { ascending: sort.direction === 'asc' });
+      } else {
+        query = query.order('date', { ascending: false });
+      }
+
+      // Apply pagination if provided
+      if (page && limit) {
+        const from = (page - 1) * limit;
+        const to = from + limit - 1;
+        query = query.range(from, to);
+      }
+
+      const { data, error, count } = await query;
       
       if (error) throw error;
       return {
         data: data as Booking[],
-        count: data?.length || 0
+        count
       };
     } catch (error) {
       return this.handleError(error);

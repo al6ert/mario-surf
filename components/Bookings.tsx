@@ -12,7 +12,6 @@ import { useSearch } from '../hooks/useSearch';
 import { useGlobalLimit } from '../hooks/useGlobalLimit';
 
 export default function Bookings() {
-  const [bookings, setBookings] = useState<Booking[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [monitors, setMonitors] = useState<Monitor[]>([]);
@@ -39,7 +38,7 @@ export default function Bookings() {
   } = useSearch();
 
   const {
-    data: bookingsData,
+    data: bookings,
     total,
     loading,
     error,
@@ -48,28 +47,21 @@ export default function Bookings() {
     page,
     limit,
     filters: {
-      search: appliedSearch
+      search: appliedSearch,
+      status: statusFilter === 'all' ? undefined : statusFilter
     },
     sort: { field: 'date', direction: 'desc' }
   });
 
-  // Fetch data from Supabase
+  // Fetch reference data from Supabase
   useEffect(() => {
-    fetchData();
+    fetchReferenceData();
   }, []);
 
-  const fetchData = async () => {
+  const fetchReferenceData = async () => {
     try {
       setIsLoading(true);
       
-      // Fetch bookings
-      const { data: bookingsData, error: bookingsError } = await supabase
-        .from('bookings')
-        .select('*')
-        .order('date', { ascending: false });
-
-      if (bookingsError) throw bookingsError;
-
       // Fetch clients
       const { data: clientsData, error: clientsError } = await supabase
         .from('clients')
@@ -91,12 +83,11 @@ export default function Bookings() {
 
       if (monitorsError) throw monitorsError;
 
-      setBookings(bookingsData || []);
       setClients(clientsData || []);
       setActivities(activitiesData || []);
       setMonitors(monitorsData || []);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error fetching reference data:', error);
     } finally {
       setIsLoading(false);
     }
@@ -122,8 +113,7 @@ export default function Bookings() {
         .eq('id', id);
 
       if (error) throw error;
-
-      setBookings(bookings.filter(booking => booking.id !== id));
+      refreshTable();
     } catch (error) {
       console.error('Error deleting booking:', error);
       alert('Error al eliminar la reserva');
@@ -138,10 +128,7 @@ export default function Bookings() {
         .eq('id', id);
 
       if (error) throw error;
-
-      setBookings(bookings.map(booking => 
-        booking.id === id ? { ...booking, status: newStatus } : booking
-      ));
+      refreshTable();
     } catch (error) {
       console.error('Error updating booking status:', error);
       alert('Error al actualizar el estado de la reserva');
@@ -187,7 +174,6 @@ export default function Bookings() {
   };
 
   const handleNewClient = async (clientData: any) => {
-    // clientData: { name, ... }
     try {
       const { data, error } = await supabase
         .from('clients')
@@ -195,7 +181,6 @@ export default function Bookings() {
         .select();
       if (error) throw error;
       setClients([...clients, data[0]]);
-      // Asignar el nuevo cliente a la reserva en edición
       if (editingClientId !== null) {
         await handleClientChange(editingClientId, data[0].id);
       }
@@ -206,26 +191,6 @@ export default function Bookings() {
     }
   };
 
-  // Filtrar bookings según búsqueda y estado
-  const filteredBookings = bookings.filter(booking => {
-    const client = clients.find(c => c.id === booking.client_id);
-    const activity = activities.find(a => a.id === booking.activity_id);
-    const monitor = monitors.find(m => m.id === booking.monitor_id);
-
-    const matchesSearch = searchTerm === '' || 
-      (client?.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (activity?.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (monitor?.name.toLowerCase().includes(searchTerm.toLowerCase()));
-
-    const matchesStatus = statusFilter === 'all' || booking.status === statusFilter;
-
-    return matchesSearch && matchesStatus;
-  });
-
-  // Paginación
-  const totalPages = Math.ceil(total / limit);
-  const paginatedBookings = filteredBookings.slice((page - 1) * limit, page * limit);
-
   const updateBooking = async (id: number, data: any) => {
     try {
       const { error } = await supabase
@@ -233,9 +198,7 @@ export default function Bookings() {
         .update(data)
         .eq('id', id);
       if (error) throw error;
-      setBookings(bookings.map(booking => 
-        booking.id === id ? { ...booking, ...data } : booking
-      ));
+      refreshTable();
     } catch (error) {
       console.error('Error updating booking:', error);
       alert('Error al actualizar la reserva');
@@ -294,7 +257,7 @@ export default function Bookings() {
 
           <div className="w-full">
             <BookingTable
-              bookings={paginatedBookings}
+              bookings={bookings}
               clients={clients}
               activities={activities}
               monitors={monitors}
@@ -339,24 +302,18 @@ export default function Bookings() {
                     .eq('id', selectedBooking.id);
 
                   if (error) throw error;
-
-                  setBookings(bookings.map(booking =>
-                    booking.id === selectedBooking.id ? { ...booking, ...bookingData } : booking
-                  ));
                 } else {
                   // Create new booking
-                  const { data, error } = await supabase
+                  const { error } = await supabase
                     .from('bookings')
-                    .insert([bookingData])
-                    .select();
+                    .insert([bookingData]);
 
                   if (error) throw error;
-
-                  setBookings([...bookings, data[0]]);
                 }
 
                 setIsModalOpen(false);
                 setSelectedBooking(null);
+                refreshTable();
               } catch (error) {
                 console.error('Error saving booking:', error);
                 alert('Error al guardar la reserva');
