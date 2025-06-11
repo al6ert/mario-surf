@@ -26,7 +26,23 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
       }
     };
 
-    checkSession();
+    // --- NUEVO: Detectar si el usuario viene de invitación ---
+    const isInviteFlow = () => {
+      if (typeof window === 'undefined') return false;
+      const hash = window.location.hash;
+      if (hash && (hash.includes('access_token') || hash.includes('type=invite'))) {
+        // Si no estamos ya en /invite, redirigir
+        if (window.location.pathname !== '/invite') {
+          window.location.href = '/invite' + window.location.hash;
+        }
+        return true;
+      }
+      return false;
+    };
+
+    if (!isInviteFlow()) {
+      checkSession();
+    }
 
     // Subscribe to auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {

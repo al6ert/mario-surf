@@ -26,7 +26,18 @@ export default function ResetPassword() {
         password: password
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message === 'New password should be different from the old password.') {
+          setError('La nueva contraseña debe ser diferente a la anterior.');
+          setPassword('');
+          setConfirmPassword('');
+          setLoading(false);
+          return;
+        }
+        setError(error.message || 'Error al establecer la contraseña');
+        setLoading(false);
+        return;
+      }
 
       setSuccess(true);
       // Redirect to login after 2 seconds
@@ -51,6 +62,28 @@ export default function ResetPassword() {
             Ingresa tu nueva contraseña
           </p>
         </div>
+
+        {error && (
+          <div className="rounded-md bg-red-50 p-4 mb-4">
+            <div className="flex">
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">{error}</h3>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {success && (
+          <div className="rounded-md bg-green-50 p-4 mb-4">
+            <div className="flex">
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-green-800">
+                  Contraseña actualizada correctamente. Redirigiendo al login...
+                </h3>
+              </div>
+            </div>
+          </div>
+        )}
 
         <form className="mt-8 space-y-6" onSubmit={handleReset}>
           <div className="space-y-4">
@@ -84,28 +117,6 @@ export default function ResetPassword() {
               />
             </div>
           </div>
-
-          {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="flex">
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-800">{error}</h3>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {success && (
-            <div className="rounded-md bg-green-50 p-4">
-              <div className="flex">
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-green-800">
-                    Contraseña actualizada correctamente. Redirigiendo al login...
-                  </h3>
-                </div>
-              </div>
-            </div>
-          )}
 
           <div>
             <button

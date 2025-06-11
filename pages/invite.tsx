@@ -8,6 +8,7 @@ export default function Invite() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -15,6 +16,7 @@ export default function Invite() {
     const hash = window.location.hash;
     if (!hash) {
       setError('Enlace de invitación inválido');
+      setSessionReady(false);
       return;
     }
 
@@ -24,6 +26,7 @@ export default function Invite() {
     
     if (!accessToken) {
       setError('Token de acceso no encontrado');
+      setSessionReady(false);
       return;
     }
 
@@ -36,8 +39,10 @@ export default function Invite() {
         });
         
         if (error) throw error;
+        setSessionReady(true);
       } catch (error) {
         setError('Error al procesar la invitación');
+        setSessionReady(false);
         console.error('Error setting session:', error);
       }
     };
@@ -67,11 +72,22 @@ export default function Invite() {
         password: password
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message === 'New password should be different from the old password.') {
+          setError('La nueva contraseña debe ser diferente a la anterior.');
+          setPassword('');
+          setConfirmPassword('');
+          setLoading(false);
+          return;
+        }
+        throw error;
+      }
 
       setSuccess(true);
       // Redirect to home after 2 seconds
       setTimeout(() => {
+        // Limpiar el hash de la URL antes de redirigir
+        window.location.hash = '';
         router.push('/');
       }, 2000);
     } catch (error) {
@@ -129,6 +145,18 @@ export default function Invite() {
             </div>
           </div>
 
+          {!sessionReady && !error && (
+            <div className="rounded-md bg-yellow-50 p-4">
+              <div className="flex">
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-yellow-800">
+                    Procesando invitación, por favor espera...
+                  </h3>
+                </div>
+              </div>
+            </div>
+          )}
+
           {error && (
             <div className="rounded-md bg-red-50 p-4">
               <div className="flex">
@@ -154,7 +182,7 @@ export default function Invite() {
           <div>
             <button
               type="submit"
-              disabled={loading || success}
+              disabled={loading || success || !sessionReady}
               className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
             >
               {loading ? (
