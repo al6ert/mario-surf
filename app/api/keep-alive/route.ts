@@ -1,29 +1,19 @@
-import { supabase } from '../../../lib/supabase';
-import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { createClient } from '../../../utils/supabase/server'
 
-export async function GET() {
-  try {
-    // Realizar una consulta simple a la tabla settings
-    const { data, error } = await supabase
-      .from('settings')
-      .select('id')
-      .limit(1);
+export async function GET(_req: NextRequest) {
+  const supabase = await createClient()
 
-    if (error) {
-      throw error;
-    }
+  // ping sin necesidad de auth; usa la tabla que prefieras
+  const { error } = await supabase
+    .from('profiles')
+    .select('id')
+    .limit(1)
 
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Supabase connection is alive',
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error('Keep-alive error:', error);
-    return NextResponse.json({ 
-      success: false, 
-      error: 'Failed to keep connection alive',
-      timestamp: new Date().toISOString()
-    }, { status: 500 });
+  if (error) {
+    return NextResponse.json({ ok: false, error: error.message }, { status: 500 })
   }
-} 
+
+  return NextResponse.json({ ok: true })
+}
