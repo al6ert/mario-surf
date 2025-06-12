@@ -1,127 +1,129 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { loadData, getState } from '../lib/data';
-import { ApiClient } from '../lib/api';
-import type { AppState } from '../lib/supabase';
-import { supabase } from '../lib/supabase';
+/* contexts/AppContext.tsx */
+'use client'
+
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode
+} from 'react'
+import { loadData, getState } from '../lib/data'
+import { ApiClient } from '../lib/api'
+import type { AppState } from '../lib/supabase'
+import { useSession } from './SessionProvider'
 
 interface AppContextType {
-  state: AppState;
-  refresh: () => Promise<void>;
-  updateEntity: (type: string, data: any) => Promise<void>;
-  deleteEntity: (type: string, id: number) => Promise<void>;
+  state: AppState
+  refresh: () => Promise<void>
+  updateEntity: (type: string, data: any) => Promise<void>
+  deleteEntity: (type: string, id: number) => Promise<void>
 }
 
-const AppContext = createContext<AppContextType | null>(null);
+const AppContext = createContext<AppContextType | null>(null)
 
-export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<AppState>(getState());
-  const [isInitialized, setIsInitialized] = useState(false);
+export function AppProvider({ children }: { children: ReactNode }) {
+  const session = useSession()
+  const [state, setState] = useState<AppState>(getState())
+  const [isReady, setIsReady] = useState(false)
 
+  /** Carga los datos solo cuando haya sesión */
   useEffect(() => {
-    const initializeApp = async () => {
+    const init = async () => {
+      if (!session) return // todavía no hay login
+
       try {
-        console.log('Initializing app...');
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session) {
-          console.log('Session exists, loading data...');
-          const newState = await loadData();
-          setState(newState);
-        } else {
-          console.log('No session found');
-        }
-      } catch (error) {
-        console.error('Error initializing app:', error);
+        setState(await loadData())
+      } catch (e) {
+        console.error('Error cargando datos', e)
       } finally {
-        setIsInitialized(true);
+        setIsReady(true)
       }
-    };
+    }
 
-    initializeApp();
+    init()
+  }, [session])
 
-    // Subscribe to auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed in AppContext:', event);
-      
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        const newState = await loadData();
-        setState(newState);
-      } else if (event === 'SIGNED_OUT') {
-        setState(getState()); // Reset to initial state
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
+  /** Resetea el estado al hacer logout */
+  useEffect(() => {
+    if (session === null) setState(getState())
+  }, [session])
 
   const refresh = async () => {
-    try {
-      const newState = await loadData();
-      setState(newState);
-    } catch (error) {
-      console.error('Error refreshing data:', error);
-      throw error;
-    }
-  };
+    setState(await loadData())
+  }
 
+  const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
+
+  /**
+   * Actualiza genérica para cualquier tabla del ApiClient.
+   *   type  👉 'client', 'activity', 'booking', etc.
+   *   data  👉 objeto con id y cambios
+   */
   const updateEntity = async (type: string, data: any) => {
-    // Actualización optimista
+    const method = `update${capitalize(type)}` as keyof typeof ApiClient
+    if (typeof ApiClient[method] !== 'function') {
+      throw new Error(`Método ${method} no existe en ApiClient`)
+    }
+
+    // Optimistic UI
     setState(prev => ({
       ...prev,
-      [type]: prev[type].map(item => 
+      [type]: prev[type].map((item: any) =>
         item.id === data.id ? { ...item, ...data } : item
       )
-    }));
-    
+    }))
+
     try {
-      await ApiClient[`update${type}`](data.id, data);
-      await refresh(); // Actualización real
-    } catch (error) {
-      // Revertir cambios si hay error
-      await refresh();
-      throw error;
+      await (ApiClient[method] as any)(data.id, data)
+      await refresh()
+    } catch (err) {
+      await refresh()        // revertir si falla
+      throw err
     }
-  };
+  }
 
   const deleteEntity = async (type: string, id: number) => {
-    // Actualización optimista
+    const method = `delete${capitalize(type)}` as keyof typeof ApiClient
+    if (typeof ApiClient[method] !== 'function') {
+      throw new Error(`Método ${method} no existe en ApiClient`)
+    }
+
+    // Optimistic UI
     setState(prev => ({
       ...prev,
-      [type]: prev[type].filter(item => item.id !== id)
-    }));
-    
-    try {
-      await ApiClient[`delete${type}`](id);
-      await refresh(); // Actualización real
-    } catch (error) {
-      // Revertir cambios si hay error
-      await refresh();
-      throw error;
-    }
-  };
+      [type]: prev[type].filter((item: any) => item.id !== id)
+    }))
 
-  // Show loading state while initializing
-  if (!isInitialized) {
+    try {
+      await (ApiClient[method] as any)(id)
+      await refresh()
+    } catch (err) {
+      await refresh()
+      throw err
+    }
+  }
+
+  if (!isReady && !!session) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <div className="h-screen w-screen flex items-center justify-center">
+        <div className="animate-spin h-12 w-12 rounded-full border-b-2 border-indigo-600" />
       </div>
-    );
+    )
   }
 
   return (
-    <AppContext.Provider value={{ state, refresh, updateEntity, deleteEntity }}>
+    <AppContext.Provider
+      value={{ state, refresh, updateEntity, deleteEntity }}
+    >
       {children}
     </AppContext.Provider>
-  );
+  )
 }
 
 export function useAppContext() {
-  const context = useContext(AppContext);
-  if (!context) {
-    throw new Error('useAppContext must be used within an AppProvider');
-  }
-  return context;
-} 
+  const context = useContext(AppContext)
+  if (!context)
+    throw new Error('useAppContext must be used within an AppProvider')
+  return context
+}

@@ -1,81 +1,25 @@
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
-import { supabase } from '../lib/supabase';
-import Auth from './Auth';
+'use client'
+import { ReactNode } from 'react'
+import { useSession } from '../contexts/SessionProvider'
+import Auth from './Auth'
 
-export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const router = useRouter();
+export default function ProtectedRoute({ children }: { children: ReactNode }) {
+  const session = useSession()
 
-  useEffect(() => {
-    // Check initial session
-    const checkSession = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Error checking session:', error);
-          setIsAuthenticated(false);
-          return;
-        }
-
-        setIsAuthenticated(!!session);
-      } catch (error) {
-        console.error('Error in session check:', error);
-        setIsAuthenticated(false);
-      }
-    };
-
-    // --- NUEVO: Detectar si el usuario viene de invitación ---
-    const isInviteFlow = () => {
-      if (typeof window === 'undefined') return false;
-      const hash = window.location.hash;
-      if (hash && (hash.includes('access_token') || hash.includes('type=invite'))) {
-        // Si no estamos ya en /invite, redirigir
-        if (window.location.pathname !== '/invite') {
-          window.location.href = '/invite' + window.location.hash;
-        }
-        return true;
-      }
-      return false;
-    };
-
-    if (!isInviteFlow()) {
-      checkSession();
-    }
-
-    // Subscribe to auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth state changed:', event, session ? 'Session exists' : 'No session');
-      
-      if (event === 'SIGNED_OUT') {
-        setIsAuthenticated(false);
-        router.push('/');
-      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        setIsAuthenticated(true);
-      }
-    });
-
-    // Cleanup subscription
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [router]);
-
-  // Show loading state while checking authentication
-  if (isAuthenticated === null) {
+  // 1) Cargando la sesión 👉 spinner
+  if (session === undefined) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <div className="h-screen w-screen flex items-center justify-center">
+        <div className="animate-spin h-12 w-12 rounded-full border-b-2 border-indigo-600" />
       </div>
-    );
+    )
   }
 
-  // Show auth page if not authenticated
-  if (!isAuthenticated) {
-    return <Auth />;
+  // 2) Ya sé que NO hay sesión 👉 pantalla Auth
+  if (session === null) {
+    return <Auth />
   }
 
-  // Show protected content if authenticated
-  return <>{children}</>;
-} 
+  // 3) Hay usuario 👉 renderiza la ruta protegida
+  return <>{children}</>
+}
