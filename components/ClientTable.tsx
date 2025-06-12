@@ -49,8 +49,6 @@ export default function ClientTable({
               <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Nombre</th>
               <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Email</th>
               <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Teléfono</th>
-              <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">DNI</th>
-              <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Dirección</th>
               <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Acciones</th>
             </tr>
           </thead>
@@ -75,8 +73,6 @@ export default function ClientTable({
                   <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900 max-w-[160px] truncate">{client.name}</td>
                   <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{client.email}</td>
                   <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{client.phone}</td>
-                  <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{client.dni}</td>
-                  <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900">{client.address}</td>
                   <td className="px-2 py-4 whitespace-nowrap text-sm font-medium">
                     <button onClick={() => onEdit(client)} className="text-blue-600 hover:text-blue-900 mr-3">Editar</button>
                     <button onClick={() => onDelete(client.id)} className="text-red-600 hover:text-red-900">Eliminar</button>
