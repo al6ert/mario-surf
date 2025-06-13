@@ -1,200 +1,152 @@
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
-import { supabase } from '../lib/supabase';
+'use client'
 
-export default function Invite() {
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-  const [sessionReady, setSessionReady] = useState(false);
-  const router = useRouter();
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'           // next/router si usas pages/
+import { createClient } from '../utils/supabase/client' // 👈 tu wrapper browser-side
 
+export default function InvitePage() {
+  const supabase = createClient()
+  const router   = useRouter()
+
+  /* ─────── estados de la UI ─────── */
+  const [loading, setLoading]   = useState(true)        // spinner inicial
+  const [error,   setError]     = useState<string|null>(null)
+  const [success, setSuccess]   = useState(false)
+
+  /* form */
+  const [password, setPassword] = useState('')
+  const [confirm,  setConfirm]  = useState('')
+
+  /* ───────────────────────────────────────────────────────────────
+     1 · Al montar el componente intentamos instalar la sesión     */
   useEffect(() => {
-    // Check if we have the access token in the URL
-    const hash = window.location.hash;
-    if (!hash) {
-      setError('Enlace de invitación inválido');
-      setSessionReady(false);
-      return;
-    }
+    const bootstrap = async () => {
+      // 1-A · ¿Ya hay sesión (p.ej. recarga de página)?
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        setLoading(false)
+        return
+      }
 
-    // Parse the hash parameters
-    const params = new URLSearchParams(hash.substring(1));
-    const accessToken = params.get('access_token');
-    
-    if (!accessToken) {
-      setError('Token de acceso no encontrado');
-      setSessionReady(false);
-      return;
-    }
+      // 1-B · Extrae access y refresh token del fragmento "#…"
+      const hash   = window.location.hash.slice(1)          // sin '#'
+      const params = new URLSearchParams(hash)
 
-    // Set the session with the access token
-    const setSession = async () => {
-      try {
+      const access_token  = params.get('access_token')
+      const refresh_token = params.get('refresh_token')
+
+      if (access_token && refresh_token) {
         const { error } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: params.get('refresh_token') || '',
-        });
-        
-        if (error) throw error;
-        setSessionReady(true);
-      } catch (error) {
-        setError('Error al procesar la invitación');
-        setSessionReady(false);
-        console.error('Error setting session:', error);
-      }
-    };
+          access_token,
+          refresh_token
+        })
 
-    setSession();
-  }, []);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    if (password !== confirmPassword) {
-      setError('Las contraseñas no coinciden');
-      setLoading(false);
-      return;
-    }
-
-    if (password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres');
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const { error } = await supabase.auth.updateUser({
-        password: password
-      });
-
-      if (error) {
-        if (error.message === 'New password should be different from the old password.') {
-          setError('La nueva contraseña debe ser diferente a la anterior.');
-          setPassword('');
-          setConfirmPassword('');
-          setLoading(false);
-          return;
+        if (error) {
+          setError(error.message)
+        } else {
+          // Limpia la URL (sin los tokens) para no dejar rastro en historial
+          window.history.replaceState({}, '', '/invite')
         }
-        throw error;
+      } else {
+        setError('Enlace de invitación inválido o expirado')
       }
 
-      setSuccess(true);
-      // Redirect to home after 2 seconds
-      setTimeout(() => {
-        // Limpiar el hash de la URL antes de redirigir
-        window.location.hash = '';
-        router.push('/');
-      }, 2000);
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Error al establecer la contraseña');
-    } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+
+    bootstrap()
+  }, [])
+
+  /* ───────────────────────────────────────────────────────────────
+     2 · Enviar el formulario: poner contraseña (mín. 6 chars)      */
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+
+    if (password.length < 6)      { setError('Mínimo 6 caracteres'); return }
+    if (password !== confirm)     { setError('Las contraseñas no coinciden'); return }
+
+    setLoading(true)
+    const { error } = await supabase.auth.updateUser({ password })
+
+    if (error) {
+      setError(error.message)
+      setLoading(false)
+      return
+    }
+
+    setSuccess(true)
+    // Redirige al dashboard (o login) tras 2 s
+    setTimeout(() => router.push('/'), 2000)
+  }
+
+  /* ─────── vistas de la UI ─────── */
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="animate-spin h-12 w-12 rounded-full border-b-2 border-indigo-600" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="bg-red-50 text-red-700 p-6 rounded-xl">{error}</div>
+      </div>
+    )
+  }
+
+  if (success) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="bg-green-50 text-green-700 p-6 rounded-xl">
+          Contraseña establecida. Redirigiendo…
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-white py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg">
-        <div>
-          <h2 className="mt-2 text-center text-3xl font-extrabold text-gray-900">
-            Bienvenido a Mario Surf
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Establece tu contraseña para comenzar
-          </p>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+      <form
+        onSubmit={handleSubmit}
+        className="max-w-md w-full space-y-6 bg-white p-8 rounded-xl shadow"
+      >
+        <h1 className="text-3xl font-extrabold text-center">Bienvenido a Mario Surf</h1>
+        <p className="text-sm text-center text-gray-600">
+          Establece tu contraseña para comenzar
+        </p>
+
+        <div className="space-y-4">
+          <input
+            type="password"
+            placeholder="Nueva contraseña"
+            minLength={6}
+            required
+            className="w-full px-3 py-2 border rounded"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+          />
+
+          <input
+            type="password"
+            placeholder="Confirmar contraseña"
+            minLength={6}
+            required
+            className="w-full px-3 py-2 border rounded"
+            value={confirm}
+            onChange={e => setConfirm(e.target.value)}
+          />
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Nueva Contraseña
-              </label>
-              <input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="••••••••"
-              />
-              <p className="mt-1 text-sm text-gray-500">
-                Mínimo 6 caracteres
-              </p>
-            </div>
-            
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                Confirmar Contraseña
-              </label>
-              <input
-                id="confirmPassword"
-                type="password"
-                required
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="••••••••"
-              />
-            </div>
-          </div>
-
-          {!sessionReady && !error && (
-            <div className="rounded-md bg-yellow-50 p-4">
-              <div className="flex">
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-yellow-800">
-                    Procesando invitación, por favor espera...
-                  </h3>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="flex">
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-800">{error}</h3>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {success && (
-            <div className="rounded-md bg-green-50 p-4">
-              <div className="flex">
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-green-800">
-                    Contraseña establecida correctamente. Redirigiendo...
-                  </h3>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div>
-            <button
-              type="submit"
-              disabled={loading || success || !sessionReady}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-            >
-              {loading ? (
-                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-              ) : 'Establecer Contraseña'}
-            </button>
-          </div>
-        </form>
-      </div>
+        <button
+          type="submit"
+          className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded"
+        >
+          Establecer contraseña
+        </button>
+      </form>
     </div>
-  );
-} 
+  )
+}
